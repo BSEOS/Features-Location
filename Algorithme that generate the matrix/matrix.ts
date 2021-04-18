@@ -63,7 +63,7 @@ class Tokens{
         documents = this.listStringsupperCase(documents);
         stopwords = this.listStringsupperCase(stopwords);
         let documentsTokens : String[][];
-        documentsTokens = this.tokensGenerator(documents)
+        documentsTokens = this.tokensGenerator(documents);
         documentsTokens = this.removeStopWords(documentsTokens, stopwords);
         for (var i = 0; i < documentsTokens.length; i++){
             for (var j = 0; j < documentsTokens[i].length; j++){
@@ -78,6 +78,39 @@ class Tokens{
             }
         }
         return new Map([...dictionary].sort());
+    }
+
+    matrixGenerator(dictionaty : Map<String, number[]>, document : String[]) : Map<String, [number, number][]> {
+        let matrix = new Map<String, [number, number][]>();
+        for (let key of dictionary.keys()) {
+            let list : number[] = [];
+            list = dictionary.get(key)!;
+            for (var i = 0; i < list.length; i++){
+                let indexDocument = list[i]-1;
+                if (matrix.has(key)){
+                    let l : [number, number][];
+                    l = (matrix.get(key)!);
+                    let find : boolean = false;
+                    for (var j = 0; j < l.length; j++){
+                        let doc = l[j][0];
+                        let cpt = l[j][1];
+                        if (doc == indexDocument+1) {
+                            l[j] = [indexDocument+1, 1+cpt];
+                            matrix.set(key,l);
+                            find = true;
+                        }
+                        if(find == true) break;
+                    }
+                    if (find == false){
+                        l.push([indexDocument+1, 1]);
+                        matrix.set(key,l);
+                    }
+                } else {
+                    matrix.set(key,[[indexDocument+1, 1]]);
+                }
+            }
+        }
+        return matrix;
     }
 }
 
@@ -97,6 +130,16 @@ let documentsTokens : String[][];
 
 let docs = new Tokens();
 let dictionary = new Map<String, number[]>();
+
 dictionary = docs.dictionarygenerator(documents, stopwords);
 dictionary = docs.removeWordsExpectIndexs(dictionary);
-console.log(dictionary);
+
+let matrix = new Map<String, [number, number][]>();
+matrix = docs.matrixGenerator(dictionary, documents);
+console.log(matrix);
+
+
+
+
+
+
