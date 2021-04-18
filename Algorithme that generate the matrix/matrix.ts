@@ -12,7 +12,7 @@ class Tokens{
 
     removeSpecialChars(documents : String[]) : String[] {
         for (var i = 0; i < documents.length; i++){
-            documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi,' ');
+            documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi,'');
         }
         return documents;
     }
@@ -118,7 +118,8 @@ let documents : String[] = [
     "The Neatest Little Guide to Stock Market Investing", 
     "Investing For Dummies, 4th Edition", 
     "The Little Book of Common Sense Investing: The Only Way to Guarantee Your Fair Share of Stock Market Returns",
-    "The Little Book of Value Investing", "Value Investing: From Graham to Buffett and Beyond", 
+    "The Little Book of Value Investing", 
+    "Value Investing: From Graham to Buffett and Beyond", 
     "Rich Dad's Guide to Investing: What the Rich Invest in, That the Poor and the Middle Class Do Not!", 
     "Investing in Real Estate, 5th Edition", 
     "Stock Investing For Dummies", 
