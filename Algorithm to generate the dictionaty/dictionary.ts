@@ -83,7 +83,7 @@ let documents : String[] = [
     "Rich Dad's Advisors: The ABC's of Real Estate Investing: The Secrets of Finding Hidden Profits Most Investors Miss" 
 ];
 
-let stopwords : String[] = ["and","edition","for","in","little","of","the","to"];
+let stopwords : String[] = ["and","edition","for","in","little","of","the","to", "", ''];
 let documentsTokens : String[][];
 
 let docs = new Tokens();
