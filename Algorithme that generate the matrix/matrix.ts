@@ -77,7 +77,7 @@ class Tokens{
                 }
             }
         }
-        return dictionary;
+        return new Map([...dictionary].sort());
     }
 }
 
@@ -96,7 +96,7 @@ let stopwords : String[] = ["and","edition","for","in","little","of","the","to",
 let documentsTokens : String[][];
 
 let docs = new Tokens();
-let dictionary = new Map();
+let dictionary = new Map<String, number[]>();
 dictionary = docs.dictionarygenerator(documents, stopwords);
 dictionary = docs.removeWordsExpectIndexs(dictionary);
 console.log(dictionary);
