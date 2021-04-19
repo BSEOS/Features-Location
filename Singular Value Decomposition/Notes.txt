@@ -1,0 +1,7 @@
+M = U + V + S
+M : Input Matrix
+	m*n (m documents, n terms).
+U : Left singular vectors
+	m*r (m documents, r concepts).
+S : Right singular vectors
+	n*r matrix (n terms, r concepts).
