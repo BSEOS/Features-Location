@@ -216,6 +216,24 @@ class Lsa{
     return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
   }
 
+    multiplyMatrixs(matrix1 : number[][], matrix2 : number[][]) : number[][]{
+        let numberRows1 = matrix1.length,
+            numberCols1 = matrix1[0].length,
+            numberRows2 = matrix2.length,
+            numberCols2 = matrix2[0].length,
+            matrix = new Array(numberRows1);
+
+        for (var r = 0; r < numberRows1; ++r) {
+         matrix[r] = new Array(numberCols2); // initialize the current row
+            for (var c = 0; c < numberCols2; ++c) {
+                matrix[r][c] = 0;             // initialize the current cell
+                for (var i = 0; i < numberCols1; ++i) {
+                    matrix[r][c] += matrix1[r][i] * matrix2[i][c];
+                 }
+             }
+         }
+    return matrix;
+    }
 }
 
 let documents : String[] = [ 
@@ -249,16 +267,27 @@ let matrixTest = [
     [0,1,1,2,0,0]
 ]
 
+let matrix1 = [
+    [1.9,0],
+    [0,1.7]
+]
+
+let matrix2 = [
+    [0.3,0.9, 0.3, 0, 0, 0],
+    [0, 0, 0, 0.4, 0.4, 0.8]
+]
+
 const { u, v, q } = SVD(matrix);
 let matrixQ = docs.vectorToOrthMatrix(q);
-matrixQ = docs.sliceMatrixCarree(matrixQ, 0, 2);
-docs.printMatrix(matrixQ);
+matrixQ = docs.sliceMatrixCarree(matrixQ, 0, 3);
+//docs.printMatrix(matrixQ);
 let matrixV = v;
 matrixV = docs.transposeMatrix(matrixV);
 matrixV = docs.sliceMatrixRect(matrixV, 3);
 //docs.printMatrix(u);
-console.log('\n##########\n')
-docs.printMatrix(matrixV);
+//console.log('\n##########\n')
+//docs.printMatrix(matrixV);
+console.log(docs.multiplyMatrixs(matrix1, matrix2));
 //docs.printMatrix(q);
 //console.log(u)
 //console.log(v)
