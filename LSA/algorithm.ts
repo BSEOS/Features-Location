@@ -192,6 +192,10 @@ class Lsa{
     return matrix;
   }
 
+  sliceMatrixRect(matrix : number[][], numberLines : number) : number[][]{
+    return matrix.slice(0, numberLines);
+  }
+
   vectorToOrthMatrix(vector : number[]) : number[][]{
     let matrix : number[][] = [];
     for (var i = 0; i < vector.length; i++){
@@ -206,6 +210,10 @@ class Lsa{
         matrix.push(ligne)
     }
     return matrix;
+  }
+
+  transposeMatrix(matrix : number[][]) : number[][] {
+    return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
   }
 
 }
@@ -245,9 +253,12 @@ const { u, v, q } = SVD(matrix);
 let matrixQ = docs.vectorToOrthMatrix(q);
 matrixQ = docs.sliceMatrixCarree(matrixQ, 0, 2);
 docs.printMatrix(matrixQ);
+let matrixV = v;
+matrixV = docs.transposeMatrix(matrixV);
+matrixV = docs.sliceMatrixRect(matrixV, 3);
 //docs.printMatrix(u);
-//console.log('##########')
-//docs.printMatrix(v);
+console.log('\n##########\n')
+docs.printMatrix(matrixV);
 //docs.printMatrix(q);
 //console.log(u)
 //console.log(v)
