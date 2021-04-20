@@ -4,9 +4,12 @@ import { SVD } from 'svd-js'
 class Lsa{
 
   documents : String[] = [];
+  stopwords : String[] = [];
+  dictionary = new Map<String, number[]>();
 
-  constructor(documents : String[]){
+  constructor(documents : String[],  stopwords : String[]){
       this.documents = documents;
+      this.stopwords = stopwords;
   }
 
   concatLisStrings(listStrings : String[]) : String {
@@ -87,7 +90,7 @@ class Lsa{
       return new Map([...dictionary].sort());
   }
 
-  matrix(dictionaty : Map<String, number[]>, document : String[]) : number[][] {
+  matrix(dictionary : Map<String, number[]>, document : String[]) : number[][] {
       let matrix : number[][] = [];
       // init matrix
       for (let key of dictionary.keys()) {
@@ -110,7 +113,7 @@ class Lsa{
       return matrix;
   }
 
-  matrixGenerator(dictionaty : Map<String, number[]>, document : String[]) : Map<String, [number, number][]> {
+  matrixGenerator(dictionary : Map<String, number[]>, document : String[]) : Map<String, [number, number][]> {
       let matrix = new Map<String, [number, number][]>();
       for (let key of dictionary.keys()) {
           let list : number[] = [];
@@ -145,7 +148,7 @@ class Lsa{
 
   numberWordsInDocument(matrix : Map<String, [number, number][]>, index : number) : number{
       let cpt = 0;
-      for (let key of dictionary.keys()){
+      for (let key of this.dictionary.keys()){
           let list : [number, number][];
           list = (matrix.get(key)!);
           for (var i = 0; i < list.length; i++){
@@ -156,7 +159,7 @@ class Lsa{
   }
 
   TFIDF( matrix : Map<String, [number, number][]>) : Map<String, [number, number][]>{
-      for (let key of dictionary.keys()){
+      for (let key of this.dictionary.keys()){
           let list : [number, number][];
           list = (matrix.get(key)!);
          for (var i = 0; i < list.length; i++){
@@ -234,6 +237,23 @@ class Lsa{
          }
     return matrix;
     }
+
+    lsa(){
+        let matrixFinal : number[][] = [];
+        this.dictionary = this.dictionarygenerator(this.documents, this.stopwords);
+        this.dictionary = this.removeWordsExpectIndexs(this.dictionary);
+        let matrix : number[][] = [];
+        matrix = this.matrix(this.dictionary, this.documents);
+        const { u, v, q } = SVD(matrix);
+        let matrixQ = this.vectorToOrthMatrix(q);
+        matrixQ = this.sliceMatrixCarree(matrixQ, 0, 3);
+        let matrixV = v;
+        matrixV = this.transposeMatrix(matrixV);
+        matrixV = this.sliceMatrixRect(matrixV, 3);
+        matrixFinal = this.multiplyMatrixs(matrixQ, matrixV);
+        return matrixFinal
+    }
+    
 }
 
 let documents : String[] = [ 
@@ -249,46 +269,9 @@ let documents : String[] = [
 ];
 
 let stopwords : String[] = ["and","edition","for","in","little","of","the","to", "", ''];
-let documentsTokens : String[][];
 
-let docs = new Lsa(documents);
-let dictionary = new Map<String, number[]>();
+let docs = new Lsa(documents, stopwords);
 
-dictionary = docs.dictionarygenerator(documents, stopwords);
-dictionary = docs.removeWordsExpectIndexs(dictionary);
-let matrix : number[][] = [];
-matrix = docs.matrix(dictionary, documents);
+let matrixResult = docs.lsa();
 
-let matrixTest = [
-    [1,0,0,1,0,0],
-    [1,0,1,0,0,0],
-    [1,1,0,0,0,0],
-    [0,1,1,0,1,0],
-    [0,1,1,2,0,0]
-]
-
-let matrix1 = [
-    [1.9,0],
-    [0,1.7]
-]
-
-let matrix2 = [
-    [0.3,0.9, 0.3, 0, 0, 0],
-    [0, 0, 0, 0.4, 0.4, 0.8]
-]
-
-const { u, v, q } = SVD(matrix);
-let matrixQ = docs.vectorToOrthMatrix(q);
-matrixQ = docs.sliceMatrixCarree(matrixQ, 0, 3);
-//docs.printMatrix(matrixQ);
-let matrixV = v;
-matrixV = docs.transposeMatrix(matrixV);
-matrixV = docs.sliceMatrixRect(matrixV, 3);
-//docs.printMatrix(u);
-//console.log('\n##########\n')
-//docs.printMatrix(matrixV);
-console.log(docs.multiplyMatrixs(matrix1, matrix2));
-//docs.printMatrix(q);
-//console.log(u)
-//console.log(v)
-//console.log(q)
+console.log(matrixResult);
