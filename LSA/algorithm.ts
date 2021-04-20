@@ -183,6 +183,31 @@ class Lsa{
           ligne = "";
       }
   }
+
+  sliceMatrixCarree(matrix : number[][], from : number, end : number) : number[][]{
+    matrix = matrix.slice(from, end);
+    for (var i = 0; i < end; i++){
+        matrix[i] = matrix[i].slice(from,end);
+    }
+    return matrix;
+  }
+
+  vectorToOrthMatrix(vector : number[]) : number[][]{
+    let matrix : number[][] = [];
+    for (var i = 0; i < vector.length; i++){
+        let ligne : number[] = [];
+        for (var j = 0; j < vector.length; j++){
+            if (i == j ){
+                ligne.push(parseFloat(vector[i].toPrecision(2)));
+            } else {
+                ligne.push(0);
+            };
+        }
+        matrix.push(ligne)
+    }
+    return matrix;
+  }
+
 }
 
 let documents : String[] = [ 
@@ -207,7 +232,23 @@ dictionary = docs.dictionarygenerator(documents, stopwords);
 dictionary = docs.removeWordsExpectIndexs(dictionary);
 let matrix : number[][] = [];
 matrix = docs.matrix(dictionary, documents);
-const { u, v, q } = SVD(matrix)
-console.log(u)
-console.log(v)
-console.log(q)
+
+let matrixTest = [
+    [1,0,0,1,0,0],
+    [1,0,1,0,0,0],
+    [1,1,0,0,0,0],
+    [0,1,1,0,1,0],
+    [0,1,1,2,0,0]
+]
+
+const { u, v, q } = SVD(matrix);
+let matrixQ = docs.vectorToOrthMatrix(q);
+matrixQ = docs.sliceMatrixCarree(matrixQ, 0, 2);
+docs.printMatrix(matrixQ);
+//docs.printMatrix(u);
+//console.log('##########')
+//docs.printMatrix(v);
+//docs.printMatrix(q);
+//console.log(u)
+//console.log(v)
+//console.log(q)
