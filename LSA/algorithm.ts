@@ -7,9 +7,7 @@ class Lsa{
   stopwords : String[] = [];
   dictionary = new Map<String, number[]>();
 
-  constructor(documents : String[],  stopwords : String[]){
-      this.documents = documents;
-      this.stopwords = stopwords;
+  constructor(){
   }
 
   concatLisStrings(listStrings : String[]) : String {
@@ -165,7 +163,7 @@ class Lsa{
          for (var i = 0; i < list.length; i++){
             let Nij : number = list[i][1];
             let Nj : number = this.numberWordsInDocument(matrix, list[i][0]);
-            let D : number = documents.length;
+            let D : number = this.documents.length;
             let Di : number = (matrix.get(key)!).length;
             let calclog : number = (Math.log(D/Di));
             let calcN : number = Nij/Nj;
@@ -253,24 +251,47 @@ class Lsa{
         matrixFinal = this.multiplyMatrixs(matrixQ, matrixV);
         return matrixFinal
     }
+
+    readDocument(fileName : String){
+        let document : String = fs.readFileSync(fileName, 'utf8');
+        this.documents.push(document);
+    }
+
+    readJson(fileName : String){
+        this.stopwords = JSON.parse(fs.readFileSync(fileName, 'utf8'));
+    }
     
 }
 
-let documents : String[] = [ 
-  "The Neatest Little Guide to Stock Market Investing", 
-  "Investing For Dummies, 4th Edition", 
-  "The Little Book of Common Sense Investing: The Only Way to Guarantee Your Fair Share of Stock Market Returns",
-  "The Little Book of Value Investing", 
-  "Value Investing: From Graham to Buffett and Beyond", 
-  "Rich Dad's Guide to Investing: What the Rich Invest in, That the Poor and the Middle Class Do Not!", 
-  "Investing in Real Estate, 5th Edition", 
-  "Stock Investing For Dummies", 
-  "Rich Dad's Advisors: The ABC's of Real Estate Investing: The Secrets of Finding Hidden Profits Most Investors Miss" 
-];
+var fs = require("fs");
 
-let stopwords : String[] = ["and","edition","for","in","little","of","the","to", "", ''];
+//let documents : String[] = [ 
+//  "The Neatest Little Guide to Stock Market Investing", 
+//  "Investing For Dummies, 4th Edition", 
+//  "The Little Book of Common Sense Investing: The Only Way to Guarantee Your Fair Share of Stock Market Returns",
+//  "The Little Book of Value Investing", 
+//  "Value Investing: From Graham to Buffett and Beyond", 
+//  "Rich Dad's Guide to Investing: What the Rich Invest in, That the Poor and the Middle Class Do Not!", 
+//  "Investing in Real Estate, 5th Edition", 
+//  "Stock Investing For Dummies", 
+//  "Rich Dad's Advisors: The ABC's of Real Estate Investing: The Secrets of Finding Hidden Profits Most Investors Miss" 
+//];
 
-let docs = new Lsa(documents, stopwords);
+//let stopwords : String[] = ["and","edition","for","in","little","of","the","to", "", ''];
+
+let docs = new Lsa();
+
+docs.readDocument('./../Samples/document1.txt');
+docs.readDocument('./../Samples/document2.txt');
+docs.readDocument('./../Samples/document3.txt');
+docs.readDocument('./../Samples/document4.txt');
+docs.readDocument('./../Samples/document5.txt');
+docs.readDocument('./../Samples/document6.txt');
+docs.readDocument('./../Samples/document7.txt');
+docs.readDocument('./../Samples/document8.txt');
+docs.readDocument('./../Samples/document9.txt');
+
+docs.readJson('./../Samples/stopwords.txt');
 
 let matrixResult = docs.lsa();
 
