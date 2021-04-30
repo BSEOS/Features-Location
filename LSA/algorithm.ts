@@ -236,16 +236,65 @@ class Lsa{
     return matrix;
     }
 
+    index_of_key_in_map(mot_cle : String) : number {
+        let indice : number = 0;
+        for (let key of this.dictionary.keys()){
+            if (mot_cle.toLocaleUpperCase() == key) {
+                return indice;
+            }
+            indice++;
+        }
+    return -1;
+    }
+
+    contient(list : String[], chaine : String) : boolean{
+        for(let element of list){
+            if (element.toLocaleUpperCase() == chaine)
+             return true;
+        }
+    return false;
+    }
+
+    generator_query_vector(mot_cles : String) : number[] {
+        let tokens_mots_cle : String[];
+        tokens_mots_cle = mot_cles.split(" ");
+        let query : number[] = [];
+        for (let key of this.dictionary.keys()){
+            if (this.contient(tokens_mots_cle, key)) {
+                query.push(1);
+            } else {
+                query.push(0);
+            }
+        }
+        return query;
+    }
+
     lsa(){
         let matrixFinal : number[][] = [];
         this.dictionary = this.dictionarygenerator(this.documents, this.stopwords);
         this.dictionary = this.removeWordsExpectIndexs(this.dictionary);
-        let matrix : number[][] = [];
-        matrix = this.matrix(this.dictionary, this.documents);
+        //console.log(this.index_of_key_in_map("RICH"));
+        console.log(this.dictionary);
+        console.log(this.generator_query_vector("RICH ESTATE"));
+        let matrix : number[][] = [
+            [1,1,0,0,1,0,0,1], [1,0,0,0,1,1,0,1], [1,0,1,0,1,0,1,0], [0,1,0,0,0,1,0,0],
+            [0,1,0,0,1,1,0,0], [0,1,1,0,1,1,0,0], [0,0,0,0,1,1,0,0], [0,0,0,0,1,0,1,0],
+            [0,0,0,0,1,0,1,1]
+        ];
+
+        
+        //matrix = this.matrix(this.dictionary, this.documents);
+       //console.log(matrix);
+        console.log("#########");
         const { u, v, q } = SVD(matrix);
         let matrixQ = this.vectorToOrthMatrix(q);
         matrixQ = this.sliceMatrixCarree(matrixQ, 0, 3);
         let matrixV = v;
+        //console.log(u);
+       // console.log("#########");
+       // console.log(matrixQ);
+       // console.log("#########");
+       // console.log(matrixV);
         matrixV = this.transposeMatrix(matrixV);
         matrixV = this.sliceMatrixRect(matrixV, 3);
         matrixFinal = this.multiplyMatrixs(matrixQ, matrixV);
@@ -267,18 +316,18 @@ var fs = require("fs");
 
 let docs = new Lsa();
 
-docs.readDocument('./../Samples/document1.txt');
-docs.readDocument('./../Samples/document2.txt');
-docs.readDocument('./../Samples/document3.txt');
-docs.readDocument('./../Samples/document4.txt');
-docs.readDocument('./../Samples/document5.txt');
-docs.readDocument('./../Samples/document6.txt');
-docs.readDocument('./../Samples/document7.txt');
-docs.readDocument('./../Samples/document8.txt');
-docs.readDocument('./../Samples/document9.txt');
+docs.readDocument('./Samples/document1.txt');
+docs.readDocument('./Samples/document2.txt');
+docs.readDocument('./Samples/document3.txt');
+docs.readDocument('./Samples/document4.txt');
+docs.readDocument('./Samples/document5.txt');
+docs.readDocument('./Samples/document6.txt');
+docs.readDocument('./Samples/document7.txt');
+docs.readDocument('./Samples/document8.txt');
+docs.readDocument('./Samples/document9.txt');
 
-docs.readJson('./../Samples/stopwords.txt');
+docs.readJson('./Samples/stopwords.txt');
 
 let matrixResult = docs.lsa();
 
-console.log(matrixResult);
+//console.log(matrixResult);
