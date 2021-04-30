@@ -355,16 +355,23 @@ class Lsa{
 
     calcul_query_coords(q : number[], u : number[][], s : number[][]) : number[]{
         let res : number[][] = [];
-        //let q_t : number[][] = this.transposeVector(q);
         let u_inv : number[][] = this.invers_matrix(u);
         res = this.multiplyMatrixs(s, u_inv);
         return this.multiply_vector_matrix(q, res);
     }
 
-    cosine_similarity(q : number[], d : number[]) : number {
+    cosinus_similarity(q : number[], d : number[]) : number {
         let dot_product = ((q[0]*d[0]) + (q[1]*d[1]));
         let product_modulus = (Math.sqrt((q[0]*q[0])+(q[1]*q[1])) * Math.sqrt((d[0]*d[0])+(d[1]*d[1])))
         return dot_product/product_modulus;
+    }
+
+    score_documents_generator(q : number[], matrixV : number[][]) : number[]{
+        let tmp : number[] = [];
+        for (var i = 0; i < matrixV.length; i++){
+           tmp.push(this.cosinus_similarity(q, matrixV[i]));
+        }
+      return tmp;
     }
 
     lsa(){
@@ -406,7 +413,7 @@ class Lsa{
         //console.log(this.transposeVector(query, matrixQ, ));
         let querry_coor : number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
         console.log(querry_coor);
-        console.log(this.cosine_similarity(querry_coor, matrixV[0]));
+        console.log(this.score_documents_generator(querry_coor, matrixV));
         matrixFinal = this.multiplyMatrixs(matrixQ, matrixV, );
         return matrixFinal
     }
