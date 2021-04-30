@@ -269,35 +269,137 @@ class Lsa{
         return query;
     }
 
+    invers_matrix(M : number[][]) : number[][]{
+    if(M.length !== M[0].length){return [];}
+    var i=0, ii=0, j=0, dim=M.length, e=0, t=0;
+    let I : number[][]= [], C : number[][]= [];
+    for(i=0; i<dim; i+=1){
+        // Create the row
+        I[I.length]=[];
+        C[C.length]=[];
+        for(j=0; j<dim; j+=1){
+            if(i==j){ I[i][j] = 1; }
+            else{ I[i][j] = 0; }
+            C[i][j] = M[i][j];
+        }
+    }
+    
+    for(i=0; i<dim; i+=1){
+        e = C[i][i];
+        if(e==0){
+            for(ii=i+1; ii<dim; ii+=1){
+                if(C[ii][i] != 0){
+                    for(j=0; j<dim; j++){
+                        e = C[i][j];       
+                        C[i][j] = C[ii][j];
+                        C[ii][j] = e;
+                        e = I[i][j];
+                        I[i][j] = I[ii][j];
+                        I[ii][j] = e;
+                    }
+                    break;
+                }
+            }
+            e = C[i][i];
+            if(e==0){return []}
+        }
+        for(j=0; j<dim; j++){
+            C[i][j] = C[i][j]/e; 
+            I[i][j] = I[i][j]/e;
+        }
+        for(ii=0; ii<dim; ii++){
+            if(ii==i){continue;}
+            e = C[ii][i];
+            for(j=0; j<dim; j++){
+                C[ii][j] -= e*C[i][j];
+                I[ii][j] -= e*I[i][j];
+            }
+        }
+    }
+    return I;
+    }
+
+    slice_matrix_verticaly(matrix : number[][]) : number[][]{
+        let tmp : number[][]= [];
+        for (var i = 0; i < matrix.length; i++){
+            tmp.push(matrix[i].slice(0,2));
+        }
+        return tmp;
+    }
+
+    transposeVector(query : number []) : number[][]{
+        let tmp : number[][]= [];
+        for (var i = 0; i < query.length; i++){
+            tmp.push([query[i]]);
+        }
+        return tmp;
+    }
+
+    multiply_vector_matrix(vector : number[] ,matrix : number[][]) : number[] {
+        let tmp : number[] = [];
+        console.log(vector)
+        for (var i = 0; i < matrix.length; i++){
+            let res : number = 0;
+            for (var j = 0; j < vector.length; j++){
+                if (vector[j] > 0){
+                    if(matrix[j][i] != null)
+                    res = res + matrix[j][i];
+                }
+            }
+            if (res != 0 ){
+                tmp.push(res);
+            }
+        }
+        return tmp;
+    }
+
+    calcul_query_coords(q : number[], u : number[][], s : number[][]) : number[]{
+        let res : number[][] = [];
+        let q_t : number[][] = this.transposeVector(q);
+        let u_inv : number[][] = this.invers_matrix(u);
+        res = this.multiplyMatrixs(s, u_inv);
+        return this.multiply_vector_matrix(q, res);
+    }
+
     lsa(){
         let matrixFinal : number[][] = [];
         this.dictionary = this.dictionarygenerator(this.documents, this.stopwords);
         this.dictionary = this.removeWordsExpectIndexs(this.dictionary);
         //console.log(this.index_of_key_in_map("RICH"));
-        console.log(this.dictionary);
-        console.log(this.generator_query_vector("RICH ESTATE"));
+        //console.log(this.dictionary);
+        //console.log(this.generator_query_vector("RICH ESTATE"));
         let matrix : number[][] = [
             [1,1,0,0,1,0,0,1], [1,0,0,0,1,1,0,1], [1,0,1,0,1,0,1,0], [0,1,0,0,0,1,0,0],
             [0,1,0,0,1,1,0,0], [0,1,1,0,1,1,0,0], [0,0,0,0,1,1,0,0], [0,0,0,0,1,0,1,0],
             [0,0,0,0,1,0,1,1]
         ];
 
+       /* let matrix : number[][]= [
+            [1,1,1], [0,1,1], [1,0,0], [0,1,0], [1,0,0], [1,0,1], [1,1,1], [1,1,1], [1,0,1], [0,2,0], [0,1,1]
+        ];*/
+
         
         //matrix = this.matrix(this.dictionary, this.documents);
        //console.log(matrix);
-        console.log("#########");
+        //console.log("#########");
         const { u, v, q } = SVD(matrix);
         let matrixQ = this.vectorToOrthMatrix(q);
-        matrixQ = this.sliceMatrixCarree(matrixQ, 0, 3);
+        matrixQ = this.sliceMatrixCarree(matrixQ, 0, 2);
         let matrixV = v;
-        //console.log(u);
+        let matrixU = u;
+        matrixV = this.sliceMatrixRect(matrixV, 2);
+        //matrixV = this.transposeMatrix(matrixV);
+        //matrixU = this.sliceMatrixRect(matrixU, 2);
+        //console.log(this.slice_matrix_verticaly(matrixU));
        // console.log("#########");
-       // console.log(matrixQ);
+       // console.log(this.invers_matrix(matrixQ));
        // console.log("#########");
        // console.log(matrixV);
-        matrixV = this.transposeMatrix(matrixV);
-        matrixV = this.sliceMatrixRect(matrixV, 3);
-        matrixFinal = this.multiplyMatrixs(matrixQ, matrixV);
+        let query = [0,0,0,1,1,0,0,0,0,0,0];
+        //console.log(this.transposeVector(query, matrixQ, ));
+        let querry_coor : number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
+        console.log(querry_coor);
+        matrixFinal = this.multiplyMatrixs(matrixQ, matrixV, );
         return matrixFinal
     }
 
