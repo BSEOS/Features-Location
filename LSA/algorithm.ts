@@ -355,10 +355,16 @@ class Lsa{
 
     calcul_query_coords(q : number[], u : number[][], s : number[][]) : number[]{
         let res : number[][] = [];
-        let q_t : number[][] = this.transposeVector(q);
+        //let q_t : number[][] = this.transposeVector(q);
         let u_inv : number[][] = this.invers_matrix(u);
         res = this.multiplyMatrixs(s, u_inv);
         return this.multiply_vector_matrix(q, res);
+    }
+
+    cosine_similarity(q : number[], d : number[]) : number {
+        let dot_product = ((q[0]*d[0]) + (q[1]*d[1]));
+        let product_modulus = (Math.sqrt((q[0]*q[0])+(q[1]*q[1])) * Math.sqrt((d[0]*d[0])+(d[1]*d[1])))
+        return dot_product/product_modulus;
     }
 
     lsa(){
@@ -387,18 +393,20 @@ class Lsa{
         matrixQ = this.sliceMatrixCarree(matrixQ, 0, 2);
         let matrixV = v;
         let matrixU = u;
-        matrixV = this.sliceMatrixRect(matrixV, 2);
+        //matrixV = this.sliceMatrixRect(matrixV, 2);
         //matrixV = this.transposeMatrix(matrixV);
         //matrixU = this.sliceMatrixRect(matrixU, 2);
+        matrixV = this.slice_matrix_verticaly(matrixV);
         //console.log(this.slice_matrix_verticaly(matrixU));
        // console.log("#########");
        // console.log(this.invers_matrix(matrixQ));
        // console.log("#########");
-       // console.log(matrixV);
+        console.log(matrixV);
         let query = [0,0,0,1,1,0,0,0,0,0,0];
         //console.log(this.transposeVector(query, matrixQ, ));
         let querry_coor : number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
         console.log(querry_coor);
+        console.log(this.cosine_similarity(querry_coor, matrixV[0]));
         matrixFinal = this.multiplyMatrixs(matrixQ, matrixV, );
         return matrixFinal
     }
