@@ -1,5 +1,6 @@
 // @ts-ignore
 import { SVD } from 'svd-js'
+import getStdin from 'get-stdin';
 
 class Lsa{
 
@@ -378,39 +379,18 @@ class Lsa{
         let matrixFinal : number[][] = [];
         this.dictionary = this.dictionarygenerator(this.documents, this.stopwords);
         this.dictionary = this.removeWordsExpectIndexs(this.dictionary);
-        //console.log(this.index_of_key_in_map("RICH"));
-        //console.log(this.dictionary);
-        //console.log(this.generator_query_vector("RICH ESTATE"));
-        let matrix : number[][] = [
-            [1,1,0,0,1,0,0,1], [1,0,0,0,1,1,0,1], [1,0,1,0,1,0,1,0], [0,1,0,0,0,1,0,0],
-            [0,1,0,0,1,1,0,0], [0,1,1,0,1,1,0,0], [0,0,0,0,1,1,0,0], [0,0,0,0,1,0,1,0],
-            [0,0,0,0,1,0,1,1]
-        ];
-
-       /* let matrix : number[][]= [
-            [1,1,1], [0,1,1], [1,0,0], [0,1,0], [1,0,0], [1,0,1], [1,1,1], [1,1,1], [1,0,1], [0,2,0], [0,1,1]
-        ];*/
-
-        
-        //matrix = this.matrix(this.dictionary, this.documents);
-       //console.log(matrix);
-        //console.log("#########");
+        console.log(this.dictionary);
+        let matrix : number[][] = [];
+        matrix = this.matrix(this.dictionary, this.documents);
         const { u, v, q } = SVD(matrix);
         let matrixQ = this.vectorToOrthMatrix(q);
         matrixQ = this.sliceMatrixCarree(matrixQ, 0, 2);
         let matrixV = v;
         let matrixU = u;
-        //matrixV = this.sliceMatrixRect(matrixV, 2);
-        //matrixV = this.transposeMatrix(matrixV);
-        //matrixU = this.sliceMatrixRect(matrixU, 2);
         matrixV = this.slice_matrix_verticaly(matrixV);
-        //console.log(this.slice_matrix_verticaly(matrixU));
-       // console.log("#########");
-       // console.log(this.invers_matrix(matrixQ));
-       // console.log("#########");
         console.log(matrixV);
-        let query = [0,0,0,1,1,0,0,0,0,0,0];
-        //console.log(this.transposeVector(query, matrixQ, ));
+        var mot_cles : String = readline.question("Veuillez saisir votre recherche : ");
+        let query = this.generator_query_vector(mot_cles.toUpperCase());
         let querry_coor : number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
         console.log(querry_coor);
         console.log(this.score_documents_generator(querry_coor, matrixV));
@@ -429,6 +409,8 @@ class Lsa{
     
 }
 
+var readline = require('readline-sync');
+
 var fs = require("fs");
 
 let docs = new Lsa();
@@ -442,9 +424,26 @@ docs.readDocument('./Samples/document6.txt');
 docs.readDocument('./Samples/document7.txt');
 docs.readDocument('./Samples/document8.txt');
 docs.readDocument('./Samples/document9.txt');
+docs.readDocument('./Samples/lib_main.txt');
+docs.readDocument('./Samples/lib_outils.txt');
 
 docs.readJson('./Samples/stopwords.txt');
 
 let matrixResult = docs.lsa();
 
 //console.log(matrixResult);
+/* comments in lsa 
+                console.log(this.index_of_key_in_map("RICH"));
+        console.log(this.generator_query_vector("RICH ESTATE"));
+        let matrix : number[][] = [
+            [1,1,0,0,1,0,0,1], [1,0,0,0,1,1,0,1], [1,0,1,0,1,0,1,0], [0,1,0,0,0,1,0,0],
+            [0,1,0,0,1,1,0,0], [0,1,1,0,1,1,0,0], [0,0,0,0,1,1,0,0], [0,0,0,0,1,0,1,0],
+            [0,0,0,0,1,0,1,1]
+        ];
+
+        let matrix : number[][]= [
+            [1,1,1], [0,1,1], [1,0,0], [0,1,0], [1,0,0], [1,0,1], [1,1,1], [1,1,1], [1,0,1], [0,2,0], [0,1,1]
+        ];
+
+        let query = [0,0,0,0,0,1,0,0,0,1,1];
+*/
