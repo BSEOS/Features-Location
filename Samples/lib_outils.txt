@@ -1,0 +1,10 @@
+// fonction pour copier un contexte d'environnement
+env copier (env env1){
+	env tmp = malloc(environnement);
+	return tmp
+}
+
+// afficher un entier
+void affiche (int x){
+	printf("x => %d", x);
+}

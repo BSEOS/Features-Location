@@ -1,0 +1,4 @@
+// fonction main principale
+int main (){
+	return 0;
+}
