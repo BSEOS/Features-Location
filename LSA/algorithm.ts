@@ -6,6 +6,7 @@ class Lsa{
 
   documents : String[] = [];
   stopwords : String[] = [];
+  documents_name : String[] = [];
   dictionary = new Map<String, number[]>();
 
   constructor(){
@@ -393,18 +394,59 @@ class Lsa{
         let query = this.generator_query_vector(mot_cles.toUpperCase());
         let querry_coor : number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
         console.log(querry_coor);
-        console.log(this.score_documents_generator(querry_coor, matrixV));
+        let scores = this.score_documents_generator(querry_coor, matrixV)
+        console.log("scores : "+ scores);
+        let name_docs = this.documents_name;
+        console.log("names : "+ name_docs);
+        console.log(this.display_most_pertinent_documents(scores, name_docs, 0, scores.length-1));
         matrixFinal = this.multiplyMatrixs(matrixQ, matrixV, );
-        return matrixFinal
+        return matrixFinal[0]
     }
 
     readDocument(fileName : String){
         let document : String = fs.readFileSync(fileName, 'utf8');
         this.documents.push(document);
+        this.documents_name.push(fileName);
     }
 
     readJson(fileName : String){
         this.stopwords = JSON.parse(fs.readFileSync(fileName, 'utf8'));
+    }
+
+    partate(scores: number[], name_docs : String[], low: number, high: number) : number{
+    let pivot: number = scores[high];
+    let i: number = (low - 1);
+    for (let j = low; j <= high-1; j++){
+        if (scores[j] > pivot){
+            i++;
+            let temp = scores[i];
+            scores[i] = scores[j];
+            scores[j] = temp;
+            let temp2 = name_docs[i];
+            name_docs[i] = name_docs[j];
+            name_docs[j] = temp2; 
+        }
+    }
+    let tempN = scores[high];
+    scores[high] = scores[i+1];
+    scores[i+1] = tempN;
+    let tempN2 = name_docs[high];
+    name_docs[high] = name_docs[i+1];
+    name_docs[i+1] = tempN2;
+    return (i + 1)
+}
+
+    display_most_pertinent_documents(scores: number[], name_docs : String[], low:number, high: number){
+       let tmp = [];
+        if (low < high){
+            let p : number;
+            p = this.partate(scores, name_docs, low, high);
+            this.display_most_pertinent_documents(scores, name_docs, low, p-1);
+            this.display_most_pertinent_documents(scores, name_docs, p+1, high);
+        }  
+        tmp.push(scores);
+        tmp.push(name_docs);
+        return tmp;
     }
     
 }
@@ -424,8 +466,8 @@ docs.readDocument('./Samples/document6.txt');
 docs.readDocument('./Samples/document7.txt');
 docs.readDocument('./Samples/document8.txt');
 docs.readDocument('./Samples/document9.txt');
-docs.readDocument('./Samples/lib_main.txt');
 docs.readDocument('./Samples/lib_outils.txt');
+docs.readDocument('./Samples/lib_main.txt');
 
 docs.readJson('./Samples/stopwords.txt');
 
