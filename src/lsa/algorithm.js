@@ -63,6 +63,11 @@ var Lsa = /** @class */ (function () {
         all_files = all_files.filter(function (obj) { return (obj.includes("/src")); });
         all_files.forEach(function (s) { return _this.readDocument(s); });
     };
+    Lsa.prototype.readDocument = function (fileName) {
+        var document = fs.readFileSync(fileName, 'utf8');
+        this.documents.push(document);
+        this.documents_name.push(fileName);
+    };
     Lsa.prototype.concatLisStrings = function (listStrings) {
         var e_1, _a;
         var finalString = "";
@@ -546,11 +551,6 @@ var Lsa = /** @class */ (function () {
         console.log(this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1));
         matrixFinal = this.multiplyMatrixs(matrixQ, matrixV);
         return matrixFinal[0];
-    };
-    Lsa.prototype.readDocument = function (fileName) {
-        var document = fs.readFileSync(fileName, 'utf8');
-        this.documents.push(document);
-        this.documents_name.push(fileName);
     };
     Lsa.prototype.readJson = function (fileName) {
         this.stopwords = JSON.parse(fs.readFileSync(fileName, 'utf8'));

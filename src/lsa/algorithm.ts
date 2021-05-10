@@ -40,6 +40,13 @@ class Lsa {
         all_files.forEach(s => this.readDocument(s))
     }
 
+    readDocument(fileName: String) {
+        let document: String = fs.readFileSync(fileName, 'utf8');
+        this.documents.push(document);
+        this.documents_name.push(fileName);
+    }
+
+
     concatLisStrings(listStrings: String[]): String {
         let finalString: String = "";
         for (let s of listStrings) {
@@ -429,14 +436,11 @@ class Lsa {
         console.log("names : " + name_docs);
         console.log(this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1));
         matrixFinal = this.multiplyMatrixs(matrixQ, matrixV,);
+
         return matrixFinal[0]
     }
 
-    readDocument(fileName: String) {
-        let document: String = fs.readFileSync(fileName, 'utf8');
-        this.documents.push(document);
-        this.documents_name.push(fileName);
-    }
+
 
     readJson(fileName: String) {
         this.stopwords = JSON.parse(fs.readFileSync(fileName, 'utf8'));
@@ -496,6 +500,8 @@ docs.readRepository(dir)
 
 
 let matrixResult = docs.lsa();
+
+
 
 
 // console.log(docs.documents_name)
