@@ -2,224 +2,253 @@
 import { SVD } from 'svd-js'
 import getStdin from 'get-stdin';
 
-class Lsa{
+var fs = require("fs");
+const path = require("path")
 
-  documents : String[] = [];
-  stopwords : String[] = [];
-  documents_name : String[] = [];
-  dictionary = new Map<String, number[]>();
+const getAllFiles = function (dirPath: String, arrayOfFiles: String[]) {
+    let files: String[] = fs.readdirSync(dirPath)
 
-  constructor(){
-  }
+    arrayOfFiles = arrayOfFiles || []
 
-  concatLisStrings(listStrings : String[]) : String {
-      let finalString : String = "";
-      for (let s of listStrings) {
-          finalString = finalString.concat(s.toString());
-      }
-      return finalString;
-  }
-
-  removeSpecialChars(documents : String[]) : String[] {
-      for (var i = 0; i < documents.length; i++){
-          documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi,'');
-      }
-      return documents;
-  }
-
-  removeStopWords(documents : String[][], stopwords : String[]) : String[][] {
-      let tmp : String;
-      for (var i = 0; i < documents.length; i++){
-         for (var j = 0; j < stopwords.length; j++) {
-            for (var k = 0; k < documents[i].length; k++){
-                  if (documents[i][k] == stopwords[j]){
-                      tmp = documents[i][documents[i].length-1];
-                      documents[i][k] = tmp;
-                      documents[i].pop();
-                  }
-            }
-          }
-      }
-      return documents;
-  }
-
-  listStringsupperCase(listStrings : String[]) : String[]{
-      for (var i = 0; i < listStrings.length; i++) {
-          listStrings[i] = listStrings[i].toUpperCase();
-      }
-      return listStrings;
-  }
-
-  tokensGenerator(documents : String[]) : String[][]{
-      let documentsTokens : String[][] = [];
-      for (var i = 0; i < documents.length; i++) {
-          documentsTokens.push(documents[i].split(" "));
-      }
-      return documentsTokens;
-  }
-
-  removeWordsExpectIndexs(dictionary : Map<String, number[]>) : Map<String, number[]> {
-      for (let key of dictionary.keys()) {
-          if ((dictionary.get(key)!).length < 2){
-              dictionary.delete(key);
-          }
-      }
-      return dictionary;   
-  }
-
-  dictionarygenerator(documents : String[], stopwords : String[]) : Map<String, number[]>{
-      let dictionary = new Map<String, number[]>();
-      documents = this.removeSpecialChars(documents);
-      documents = this.listStringsupperCase(documents);
-      stopwords = this.listStringsupperCase(stopwords);
-      let documentsTokens : String[][];
-      documentsTokens = this.tokensGenerator(documents);
-      documentsTokens = this.removeStopWords(documentsTokens, stopwords);
-      for (var i = 0; i < documentsTokens.length; i++){
-          for (var j = 0; j < documentsTokens[i].length; j++){
-              if (dictionary.has(documentsTokens[i][j])){
-                 let list : number[] = [];
-                 list = dictionary.get(documentsTokens[i][j])!;
-                 list.push(i+1);
-                 dictionary.set(documentsTokens[i][j], list);
-              } else {
-                 dictionary.set(documentsTokens[i][j], [i+1]);
-              }
-          }
-      }
-      return new Map([...dictionary].sort());
-  }
-
-  matrix(dictionary : Map<String, number[]>, document : String[]) : number[][] {
-      let matrix : number[][] = [];
-      // init matrix
-      for (let key of dictionary.keys()) {
-          let ligne : number[] = [];
-          for (var i = 0; i < document.length; i++){
-              ligne.push(0);
-          }
-          matrix.push(ligne);
-      }
-      // editing cpts
-      let j = 0;
-      for (let key of dictionary.keys()) {
-          let list : number[] = [];
-          list = dictionary.get(key)!; 
-          for (var i = 0; i < list.length; i++){
-              matrix[j][list[i]-1]++;
-          }
-          j++;
-      }
-      return matrix;
-  }
-
-  matrixGenerator(dictionary : Map<String, number[]>, document : String[]) : Map<String, [number, number][]> {
-      let matrix = new Map<String, [number, number][]>();
-      for (let key of dictionary.keys()) {
-          let list : number[] = [];
-          list = dictionary.get(key)!;
-          for (var i = 0; i < list.length; i++){
-              let indexDocument = list[i]-1;
-              if (matrix.has(key)){
-                  let l : [number, number][];
-                  l = (matrix.get(key)!);
-                  let find : boolean = false;
-                  for (var j = 0; j < l.length; j++){
-                      let doc = l[j][0];
-                      let cpt = l[j][1];
-                      if (doc == indexDocument+1) {
-                          l[j] = [indexDocument+1, 1+cpt];
-                          matrix.set(key,l);
-                          find = true;
-                      }
-                      if(find == true) break;
-                  }
-                  if (find == false){
-                      l.push([indexDocument+1, 1]);
-                      matrix.set(key,l);
-                  }
-              } else {
-                  matrix.set(key,[[indexDocument+1, 1]]);
-              }
-          }
-      }
-      return matrix;
-  }
-
-  numberWordsInDocument(matrix : Map<String, [number, number][]>, index : number) : number{
-      let cpt = 0;
-      for (let key of this.dictionary.keys()){
-          let list : [number, number][];
-          list = (matrix.get(key)!);
-          for (var i = 0; i < list.length; i++){
-              if (list[i][0] == index) cpt++
-           }         
-      }
-      return cpt;
-  }
-
-  TFIDF( matrix : Map<String, [number, number][]>) : Map<String, [number, number][]>{
-      for (let key of this.dictionary.keys()){
-          let list : [number, number][];
-          list = (matrix.get(key)!);
-         for (var i = 0; i < list.length; i++){
-            let Nij : number = list[i][1];
-            let Nj : number = this.numberWordsInDocument(matrix, list[i][0]);
-            let D : number = this.documents.length;
-            let Di : number = (matrix.get(key)!).length;
-            let calclog : number = (Math.log(D/Di));
-            let calcN : number = Nij/Nj;
-            list[i][1] = parseFloat((calcN*calclog).toPrecision(2));
-            matrix.set(key,list);
-         } 
-      }
-      return matrix;
-  }
-
-  printMatrix(matrix : number[][]) {
-      let ligne : String= "";
-      for (var i = 0; i < matrix.length; i++){
-          for (var j = 0; j < matrix[i].length; j++){
-              ligne = ligne.concat(matrix[i][j].toString());
-          }
-          console.log(ligne);
-          ligne = "";
-      }
-  }
-
-  sliceMatrixCarree(matrix : number[][], from : number, end : number) : number[][]{
-    matrix = matrix.slice(from, end);
-    for (var i = 0; i < end; i++){
-        matrix[i] = matrix[i].slice(from,end);
-    }
-    return matrix;
-  }
-
-  sliceMatrixRect(matrix : number[][], numberLines : number) : number[][]{
-    return matrix.slice(0, numberLines);
-  }
-
-  vectorToOrthMatrix(vector : number[]) : number[][]{
-    let matrix : number[][] = [];
-    for (var i = 0; i < vector.length; i++){
-        let ligne : number[] = [];
-        for (var j = 0; j < vector.length; j++){
-            if (i == j ){
-                ligne.push(parseFloat(vector[i].toPrecision(2)));
-            } else {
-                ligne.push(0);
-            };
+    files.forEach(function (file) {
+        if (fs.statSync(dirPath + "/" + file).isDirectory()) {
+            arrayOfFiles = getAllFiles(dirPath + "/" + file, arrayOfFiles)
+        } else {
+            arrayOfFiles.push(path.join(dirPath, "/", file))
         }
-        matrix.push(ligne)
+    })
+
+    return arrayOfFiles
+}
+
+class Lsa {
+
+    documents: String[] = [];
+    stopwords: String[] = [];
+    documents_name: String[] = [];
+    dictionary = new Map<String, number[]>();
+
+    constructor() {
     }
-    return matrix;
-  }
 
-  transposeMatrix(matrix : number[][]) : number[][] {
-    return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
-  }
+    readRepository(dir: String) {
+        let all_files = getAllFiles(dir, [])
+        // console.log("all_files :" + all_files)
+        all_files = all_files.filter(s => !s.includes("stopwords.json"))
 
-    multiplyMatrixs(matrix1 : number[][], matrix2 : number[][]) : number[][]{
+        all_files = all_files.filter(obj => (obj.includes("/src")))
+        all_files.forEach(s => this.readDocument(s))
+    }
+
+    concatLisStrings(listStrings: String[]): String {
+        let finalString: String = "";
+        for (let s of listStrings) {
+            finalString = finalString.concat(s.toString());
+        }
+        return finalString;
+    }
+
+    removeSpecialChars(documents: String[]): String[] {
+        for (var i = 0; i < documents.length; i++) {
+            documents[i] = documents[i].replace('\n', '');
+            documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '');
+        }
+        return documents;
+    }
+
+    removeStopWords(documents: String[][], stopwords: String[]): String[][] {
+        let tmp: String;
+        for (var i = 0; i < documents.length; i++) {
+            for (var j = 0; j < stopwords.length; j++) {
+                for (var k = 0; k < documents[i].length; k++) {
+                    if (documents[i][k] == stopwords[j]) {
+                        tmp = documents[i][documents[i].length - 1];
+                        documents[i][k] = tmp;
+                        documents[i].pop();
+                    }
+                }
+            }
+        }
+        return documents;
+    }
+
+    listStringsupperCase(listStrings: String[]): String[] {
+        for (var i = 0; i < listStrings.length; i++) {
+            listStrings[i] = listStrings[i].toUpperCase();
+        }
+        return listStrings;
+    }
+
+    tokensGenerator(documents: String[]): String[][] {
+        let documentsTokens: String[][] = [];
+        for (var i = 0; i < documents.length; i++) {
+            documentsTokens.push(documents[i].split(" "));
+        }
+        return documentsTokens;
+    }
+
+    removeWordsExpectIndexs(dictionary: Map<String, number[]>): Map<String, number[]> {
+        for (let key of dictionary.keys()) {
+            if ((dictionary.get(key)!).length < 2) {
+                dictionary.delete(key);
+            }
+        }
+        return dictionary;
+    }
+
+    dictionarygenerator(documents: String[], stopwords: String[]): Map<String, number[]> {
+        let dictionary = new Map<String, number[]>();
+        documents = this.removeSpecialChars(documents);
+        documents = this.listStringsupperCase(documents);
+        stopwords = this.listStringsupperCase(stopwords);
+        let documentsTokens: String[][];
+        documentsTokens = this.tokensGenerator(documents);
+        documentsTokens = this.removeStopWords(documentsTokens, stopwords);
+        for (var i = 0; i < documentsTokens.length; i++) {
+            for (var j = 0; j < documentsTokens[i].length; j++) {
+                if (dictionary.has(documentsTokens[i][j])) {
+                    let list: number[] = [];
+                    list = dictionary.get(documentsTokens[i][j])!;
+                    list.push(i + 1);
+                    dictionary.set(documentsTokens[i][j], list);
+                } else {
+                    dictionary.set(documentsTokens[i][j], [i + 1]);
+                }
+            }
+        }
+        return new Map([...dictionary].sort());
+    }
+
+    matrix(dictionary: Map<String, number[]>, document: String[]): number[][] {
+        let matrix: number[][] = [];
+        // init matrix
+        for (let key of dictionary.keys()) {
+            let ligne: number[] = [];
+            for (var i = 0; i < document.length; i++) {
+                ligne.push(0);
+            }
+            matrix.push(ligne);
+        }
+        // editing cpts
+        let j = 0;
+        for (let key of dictionary.keys()) {
+            let list: number[] = [];
+            list = dictionary.get(key)!;
+            for (var i = 0; i < list.length; i++) {
+                matrix[j][list[i] - 1]++;
+            }
+            j++;
+        }
+        return matrix;
+    }
+
+    matrixGenerator(dictionary: Map<String, number[]>, document: String[]): Map<String, [number, number][]> {
+        let matrix = new Map<String, [number, number][]>();
+        for (let key of dictionary.keys()) {
+            let list: number[] = [];
+            list = dictionary.get(key)!;
+            for (var i = 0; i < list.length; i++) {
+                let indexDocument = list[i] - 1;
+                if (matrix.has(key)) {
+                    let l: [number, number][];
+                    l = (matrix.get(key)!);
+                    let find: boolean = false;
+                    for (var j = 0; j < l.length; j++) {
+                        let doc = l[j][0];
+                        let cpt = l[j][1];
+                        if (doc == indexDocument + 1) {
+                            l[j] = [indexDocument + 1, 1 + cpt];
+                            matrix.set(key, l);
+                            find = true;
+                        }
+                        if (find == true) break;
+                    }
+                    if (find == false) {
+                        l.push([indexDocument + 1, 1]);
+                        matrix.set(key, l);
+                    }
+                } else {
+                    matrix.set(key, [[indexDocument + 1, 1]]);
+                }
+            }
+        }
+        return matrix;
+    }
+
+    numberWordsInDocument(matrix: Map<String, [number, number][]>, index: number): number {
+        let cpt = 0;
+        for (let key of this.dictionary.keys()) {
+            let list: [number, number][];
+            list = (matrix.get(key)!);
+            for (var i = 0; i < list.length; i++) {
+                if (list[i][0] == index) cpt++
+            }
+        }
+        return cpt;
+    }
+
+    TFIDF(matrix: Map<String, [number, number][]>): Map<String, [number, number][]> {
+        for (let key of this.dictionary.keys()) {
+            let list: [number, number][];
+            list = (matrix.get(key)!);
+            for (var i = 0; i < list.length; i++) {
+                let Nij: number = list[i][1];
+                let Nj: number = this.numberWordsInDocument(matrix, list[i][0]);
+                let D: number = this.documents.length;
+                let Di: number = (matrix.get(key)!).length;
+                let calclog: number = (Math.log(D / Di));
+                let calcN: number = Nij / Nj;
+                list[i][1] = parseFloat((calcN * calclog).toPrecision(2));
+                matrix.set(key, list);
+            }
+        }
+        return matrix;
+    }
+
+    printMatrix(matrix: number[][]) {
+        let ligne: String = "";
+        for (var i = 0; i < matrix.length; i++) {
+            for (var j = 0; j < matrix[i].length; j++) {
+                ligne = ligne.concat(matrix[i][j].toString());
+            }
+            console.log(ligne);
+            ligne = "";
+        }
+    }
+
+    sliceMatrixCarree(matrix: number[][], from: number, end: number): number[][] {
+        matrix = matrix.slice(from, end);
+        for (var i = 0; i < end; i++) {
+            matrix[i] = matrix[i].slice(from, end);
+        }
+        return matrix;
+    }
+
+    sliceMatrixRect(matrix: number[][], numberLines: number): number[][] {
+        return matrix.slice(0, numberLines);
+    }
+
+    vectorToOrthMatrix(vector: number[]): number[][] {
+        let matrix: number[][] = [];
+        for (var i = 0; i < vector.length; i++) {
+            let ligne: number[] = [];
+            for (var j = 0; j < vector.length; j++) {
+                if (i == j) {
+                    ligne.push(parseFloat(vector[i].toPrecision(2)));
+                } else {
+                    ligne.push(0);
+                };
+            }
+            matrix.push(ligne)
+        }
+        return matrix;
+    }
+
+    transposeMatrix(matrix: number[][]): number[][] {
+        return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
+    }
+
+    multiplyMatrixs(matrix1: number[][], matrix2: number[][]): number[][] {
         let numberRows1 = matrix1.length,
             numberCols1 = matrix1[0].length,
             numberRows2 = matrix2.length,
@@ -227,41 +256,41 @@ class Lsa{
             matrix = new Array(numberRows1);
 
         for (var r = 0; r < numberRows1; ++r) {
-         matrix[r] = new Array(numberCols2); // initialize the current row
+            matrix[r] = new Array(numberCols2); // initialize the current row
             for (var c = 0; c < numberCols2; ++c) {
                 matrix[r][c] = 0;             // initialize the current cell
                 for (var i = 0; i < numberCols1; ++i) {
                     matrix[r][c] += matrix1[r][i] * matrix2[i][c];
-                 }
-             }
-         }
-    return matrix;
+                }
+            }
+        }
+        return matrix;
     }
 
-    index_of_key_in_map(mot_cle : String) : number {
-        let indice : number = 0;
-        for (let key of this.dictionary.keys()){
+    index_of_key_in_map(mot_cle: String): number {
+        let indice: number = 0;
+        for (let key of this.dictionary.keys()) {
             if (mot_cle.toLocaleUpperCase() == key) {
                 return indice;
             }
             indice++;
         }
-    return -1;
+        return -1;
     }
 
-    contient(list : String[], chaine : String) : boolean{
-        for(let element of list){
+    contient(list: String[], chaine: String): boolean {
+        for (let element of list) {
             if (element.toLocaleUpperCase() == chaine)
-             return true;
+                return true;
         }
-    return false;
+        return false;
     }
 
-    generator_query_vector(mot_cles : String) : number[] {
-        let tokens_mots_cle : String[];
+    generator_query_vector(mot_cles: String): number[] {
+        let tokens_mots_cle: String[];
         tokens_mots_cle = mot_cles.split(" ");
-        let query : number[] = [];
-        for (let key of this.dictionary.keys()){
+        let query: number[] = [];
+        for (let key of this.dictionary.keys()) {
             if (this.contient(tokens_mots_cle, key)) {
                 query.push(1);
             } else {
@@ -271,117 +300,117 @@ class Lsa{
         return query;
     }
 
-    invers_matrix(M : number[][]) : number[][]{
-    if(M.length !== M[0].length){return [];}
-    var i=0, ii=0, j=0, dim=M.length, e=0, t=0;
-    let I : number[][]= [], C : number[][]= [];
-    for(i=0; i<dim; i+=1){
-        // Create the row
-        I[I.length]=[];
-        C[C.length]=[];
-        for(j=0; j<dim; j+=1){
-            if(i==j){ I[i][j] = 1; }
-            else{ I[i][j] = 0; }
-            C[i][j] = M[i][j];
+    invers_matrix(M: number[][]): number[][] {
+        if (M.length !== M[0].length) { return []; }
+        var i = 0, ii = 0, j = 0, dim = M.length, e = 0, t = 0;
+        let I: number[][] = [], C: number[][] = [];
+        for (i = 0; i < dim; i += 1) {
+            // Create the row
+            I[I.length] = [];
+            C[C.length] = [];
+            for (j = 0; j < dim; j += 1) {
+                if (i == j) { I[i][j] = 1; }
+                else { I[i][j] = 0; }
+                C[i][j] = M[i][j];
+            }
         }
-    }
-    
-    for(i=0; i<dim; i+=1){
-        e = C[i][i];
-        if(e==0){
-            for(ii=i+1; ii<dim; ii+=1){
-                if(C[ii][i] != 0){
-                    for(j=0; j<dim; j++){
-                        e = C[i][j];       
-                        C[i][j] = C[ii][j];
-                        C[ii][j] = e;
-                        e = I[i][j];
-                        I[i][j] = I[ii][j];
-                        I[ii][j] = e;
+
+        for (i = 0; i < dim; i += 1) {
+            e = C[i][i];
+            if (e == 0) {
+                for (ii = i + 1; ii < dim; ii += 1) {
+                    if (C[ii][i] != 0) {
+                        for (j = 0; j < dim; j++) {
+                            e = C[i][j];
+                            C[i][j] = C[ii][j];
+                            C[ii][j] = e;
+                            e = I[i][j];
+                            I[i][j] = I[ii][j];
+                            I[ii][j] = e;
+                        }
+                        break;
                     }
-                    break;
+                }
+                e = C[i][i];
+                if (e == 0) { return [] }
+            }
+            for (j = 0; j < dim; j++) {
+                C[i][j] = C[i][j] / e;
+                I[i][j] = I[i][j] / e;
+            }
+            for (ii = 0; ii < dim; ii++) {
+                if (ii == i) { continue; }
+                e = C[ii][i];
+                for (j = 0; j < dim; j++) {
+                    C[ii][j] -= e * C[i][j];
+                    I[ii][j] -= e * I[i][j];
                 }
             }
-            e = C[i][i];
-            if(e==0){return []}
         }
-        for(j=0; j<dim; j++){
-            C[i][j] = C[i][j]/e; 
-            I[i][j] = I[i][j]/e;
-        }
-        for(ii=0; ii<dim; ii++){
-            if(ii==i){continue;}
-            e = C[ii][i];
-            for(j=0; j<dim; j++){
-                C[ii][j] -= e*C[i][j];
-                I[ii][j] -= e*I[i][j];
-            }
-        }
-    }
-    return I;
+        return I;
     }
 
-    slice_matrix_verticaly(matrix : number[][]) : number[][]{
-        let tmp : number[][]= [];
-        for (var i = 0; i < matrix.length; i++){
-            tmp.push(matrix[i].slice(0,2));
+    slice_matrix_verticaly(matrix: number[][]): number[][] {
+        let tmp: number[][] = [];
+        for (var i = 0; i < matrix.length; i++) {
+            tmp.push(matrix[i].slice(0, 2));
         }
         return tmp;
     }
 
-    transposeVector(query : number []) : number[][]{
-        let tmp : number[][]= [];
-        for (var i = 0; i < query.length; i++){
+    transposeVector(query: number[]): number[][] {
+        let tmp: number[][] = [];
+        for (var i = 0; i < query.length; i++) {
             tmp.push([query[i]]);
         }
         return tmp;
     }
 
-    multiply_vector_matrix(vector : number[] ,matrix : number[][]) : number[] {
-        let tmp : number[] = [];
+    multiply_vector_matrix(vector: number[], matrix: number[][]): number[] {
+        let tmp: number[] = [];
         console.log(vector)
-        for (var i = 0; i < matrix.length; i++){
-            let res : number = 0;
-            for (var j = 0; j < vector.length; j++){
-                if (vector[j] > 0){
-                    if(matrix[j][i] != null)
-                    res = res + matrix[j][i];
+        for (var i = 0; i < matrix.length; i++) {
+            let res: number = 0;
+            for (var j = 0; j < vector.length; j++) {
+                if (vector[j] > 0) {
+                    if (matrix[j][i] != null)
+                        res = res + matrix[j][i];
                 }
             }
-            if (res != 0 ){
+            if (res != 0) {
                 tmp.push(res);
             }
         }
         return tmp;
     }
 
-    calcul_query_coords(q : number[], u : number[][], s : number[][]) : number[]{
-        let res : number[][] = [];
-        let u_inv : number[][] = this.invers_matrix(u);
+    calcul_query_coords(q: number[], u: number[][], s: number[][]): number[] {
+        let res: number[][] = [];
+        let u_inv: number[][] = this.invers_matrix(u);
         res = this.multiplyMatrixs(s, u_inv);
         return this.multiply_vector_matrix(q, res);
     }
 
-    cosinus_similarity(q : number[], d : number[]) : number {
-        let dot_product = ((q[0]*d[0]) + (q[1]*d[1]));
-        let product_modulus = (Math.sqrt((q[0]*q[0])+(q[1]*q[1])) * Math.sqrt((d[0]*d[0])+(d[1]*d[1])))
-        return dot_product/product_modulus;
+    cosinus_similarity(q: number[], d: number[]): number {
+        let dot_product = ((q[0] * d[0]) + (q[1] * d[1]));
+        let product_modulus = (Math.sqrt((q[0] * q[0]) + (q[1] * q[1])) * Math.sqrt((d[0] * d[0]) + (d[1] * d[1])))
+        return dot_product / product_modulus;
     }
 
-    score_documents_generator(q : number[], matrixV : number[][]) : number[]{
-        let tmp : number[] = [];
-        for (var i = 0; i < matrixV.length; i++){
-           tmp.push(this.cosinus_similarity(q, matrixV[i]));
+    score_documents_generator(q: number[], matrixV: number[][]): number[] {
+        let tmp: number[] = [];
+        for (var i = 0; i < matrixV.length; i++) {
+            tmp.push(this.cosinus_similarity(q, matrixV[i]));
         }
-      return tmp;
+        return tmp;
     }
 
-    lsa(){
-        let matrixFinal : number[][] = [];
+    lsa() {
+        let matrixFinal: number[][] = [];
         this.dictionary = this.dictionarygenerator(this.documents, this.stopwords);
         this.dictionary = this.removeWordsExpectIndexs(this.dictionary);
         console.log(this.dictionary);
-        let matrix : number[][] = [];
+        let matrix: number[][] = [];
         matrix = this.matrix(this.dictionary, this.documents);
         const { u, v, q } = SVD(matrix);
         let matrixQ = this.vectorToOrthMatrix(q);
@@ -390,91 +419,89 @@ class Lsa{
         let matrixU = u;
         matrixV = this.slice_matrix_verticaly(matrixV);
         console.log(matrixV);
-        var mot_cles : String = readline.question("Veuillez saisir votre recherche : ");
+        var mot_cles: String = readline.question("Veuillez saisir votre recherche : ");
         let query = this.generator_query_vector(mot_cles.toUpperCase());
-        let querry_coor : number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
+        let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
         console.log(querry_coor);
         let scores = this.score_documents_generator(querry_coor, matrixV)
-        console.log("scores : "+ scores);
+        console.log("scores : " + scores);
         let name_docs = this.documents_name;
-        console.log("names : "+ name_docs);
-        console.log(this.display_most_pertinent_documents(scores, name_docs, 0, scores.length-1));
-        matrixFinal = this.multiplyMatrixs(matrixQ, matrixV, );
+        console.log("names : " + name_docs);
+        console.log(this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1));
+        matrixFinal = this.multiplyMatrixs(matrixQ, matrixV,);
         return matrixFinal[0]
     }
 
-    readDocument(fileName : String){
-        let document : String = fs.readFileSync(fileName, 'utf8');
+    readDocument(fileName: String) {
+        let document: String = fs.readFileSync(fileName, 'utf8');
         this.documents.push(document);
         this.documents_name.push(fileName);
     }
 
-    readJson(fileName : String){
+    readJson(fileName: String) {
         this.stopwords = JSON.parse(fs.readFileSync(fileName, 'utf8'));
     }
 
-    partate(scores: number[], name_docs : String[], low: number, high: number) : number{
-    let pivot: number = scores[high];
-    let i: number = (low - 1);
-    for (let j = low; j <= high-1; j++){
-        if (scores[j] > pivot){
-            i++;
-            let temp = scores[i];
-            scores[i] = scores[j];
-            scores[j] = temp;
-            let temp2 = name_docs[i];
-            name_docs[i] = name_docs[j];
-            name_docs[j] = temp2; 
+    partate(scores: number[], name_docs: String[], low: number, high: number): number {
+        let pivot: number = scores[high];
+        let i: number = (low - 1);
+        for (let j = low; j <= high - 1; j++) {
+            if (scores[j] > pivot) {
+                i++;
+                let temp = scores[i];
+                scores[i] = scores[j];
+                scores[j] = temp;
+                let temp2 = name_docs[i];
+                name_docs[i] = name_docs[j];
+                name_docs[j] = temp2;
+            }
         }
+        let tempN = scores[high];
+        scores[high] = scores[i + 1];
+        scores[i + 1] = tempN;
+        let tempN2 = name_docs[high];
+        name_docs[high] = name_docs[i + 1];
+        name_docs[i + 1] = tempN2;
+        return (i + 1)
     }
-    let tempN = scores[high];
-    scores[high] = scores[i+1];
-    scores[i+1] = tempN;
-    let tempN2 = name_docs[high];
-    name_docs[high] = name_docs[i+1];
-    name_docs[i+1] = tempN2;
-    return (i + 1)
-}
 
-    display_most_pertinent_documents(scores: number[], name_docs : String[], low:number, high: number){
-       let tmp = [];
-        if (low < high){
-            let p : number;
+    display_most_pertinent_documents(scores: number[], name_docs: String[], low: number, high: number) {
+        let tmp = [];
+        if (low < high) {
+            let p: number;
             p = this.partate(scores, name_docs, low, high);
-            this.display_most_pertinent_documents(scores, name_docs, low, p-1);
-            this.display_most_pertinent_documents(scores, name_docs, p+1, high);
-        }  
+            this.display_most_pertinent_documents(scores, name_docs, low, p - 1);
+            this.display_most_pertinent_documents(scores, name_docs, p + 1, high);
+        }
         tmp.push(scores);
         tmp.push(name_docs);
         return tmp;
     }
-    
+
 }
+
+
 
 var readline = require('readline-sync');
 
-var fs = require("fs");
+
 
 let docs = new Lsa();
 
-docs.readDocument('./Samples/document1.txt');
-docs.readDocument('./Samples/document2.txt');
-docs.readDocument('./Samples/document3.txt');
-docs.readDocument('./Samples/document4.txt');
-docs.readDocument('./Samples/document5.txt');
-docs.readDocument('./Samples/document6.txt');
-docs.readDocument('./Samples/document7.txt');
-docs.readDocument('./Samples/document8.txt');
-docs.readDocument('./Samples/document9.txt');
-docs.readDocument('./Samples/lib_outils.txt');
-docs.readDocument('./Samples/lib_main.txt');
 
-docs.readJson('./Samples/stopwords.txt');
+
+docs.readJson('./Samples/stopwords.json');
+let dir = "/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability"
+docs.readRepository(dir)
+
 
 let matrixResult = docs.lsa();
 
+
+// console.log(docs.documents_name)
+
 //console.log(matrixResult);
-/* comments in lsa 
+/* comments in lsa
                 console.log(this.index_of_key_in_map("RICH"));
         console.log(this.generator_query_vector("RICH ESTATE"));
         let matrix : number[][] = [

@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@types/node": "^14.14.41"
+  },
+  "dependencies": {
+    "get-stdin": "^9.0.0",
+    "readline-sync": "^1.4.10",
+    "svd-js": "^1.1.1"
+  }
+}
