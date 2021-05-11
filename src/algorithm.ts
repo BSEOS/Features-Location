@@ -40,6 +40,7 @@ class LSA {
     documents: String[] = [];
     stopwords: String[] = [];
     documents_name: String[] = [];
+    documents_name_invar: String[] = [];
     dictionary = new Map<String, number[]>();
     documentLinesR = new Map <number, [String, Range][]>();
     documentLinesS = new Map <number, String[]>();
@@ -62,6 +63,7 @@ class LSA {
         let document: String = fs.readFileSync(fileName, 'utf8');
         this.documents.push(document);
         this.documents_name.push(fileName);
+        this.documents_name_invar.push(fileName);
     }
 
 
@@ -104,7 +106,6 @@ class LSA {
                         documents[i].pop();
                     }
                 }
-                // a verifier si il supprime le stop word
                 for (var x = 0; x < listtokens.length; x++) {
                     if (listtokens[x][0] == stopwords[j]) {
                         tmp2 = listtokens[listtokens.length-1];
@@ -155,10 +156,6 @@ class LSA {
             }
             this.documentLinesR.set(i, dictionnaire)
         }
-     //  console.log("******************************")
-       // console.log(this.documentLinesR)
-      //  console.log("******************************")
-        //-----
         for (var i = 0; i < documents.length; i++) {
             documentsTokens.push(documents[i].split(" "));
         }
@@ -183,9 +180,6 @@ class LSA {
         let documentsTokens: String[][];
         documentsTokens = this.tokensGenerator(documents);
         documentsTokens = this.removeStopWords(documentsTokens, stopwords);
-        console.log('-----------------------')
-        console.log(this.documentLinesR)
-        console.log('-----------------------')
         for (var i = 0; i < documentsTokens.length; i++) {
             for (var j = 0; j < documentsTokens[i].length; j++) {
                 if (dictionary.has(documentsTokens[i][j])) {
@@ -507,9 +501,6 @@ class LSA {
         let matrixFinal: number[][] = [];
         this.documentLinesGenerator();
         this.dictionary = this.dictionarygenerator(this.documents, this.stopwords);
-        console.log("#############################")
-        console.log(this.documents);
-        console.log(this.stopwords);
         this.dictionary = this.removeWordsExpectIndexs(this.dictionary);
         //console.log(this.dictionary);
         let matrix: number[][] = [];
@@ -529,15 +520,59 @@ class LSA {
         console.log(querry_coor);
         let scores = this.score_documents_generator(querry_coor, matrixV)
         console.log("scores : " + scores);
-        let name_docs = this.documents_name;
-        console.log("names : " + name_docs);
-        console.log(this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1));
+        var name_docs = this.documents_name;
+      //  console.log("names : " + name_docs);
+        let pertinent_docs : [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
+      //  console.log("pertinent_docs");
+     //   console.log(pertinent_docs);
+        let finalMap : Map<String, Range[]> = this.generateRangesRequest(request, pertinent_docs);
+        console.log("======================================")
+        console.log(finalMap)
+        console.log("======================================")
         matrixFinal = this.multiplyMatrixs(matrixQ, matrixV,);
-
         return matrixFinal[0]
     }
 
+    getIdDocument(name : String) : number {
+        for(var i = 0; i < this.documents_name.length; i++){
+            if (this.documents_name_invar[i] == name){
+                return i;
+            }
+        }
+        return -1;
+    }
 
+    searchRangesInDocument(request : String, list : [String, Range][]) : Range[]{
+        let list_range : Range[] = [];
+        for (var i = 0; i < list.length; i++){
+            if (request == list[i][0]){
+                list_range.push(list[i][1]);
+            }
+        }  
+        return list_range
+    }
+
+    generateRangesRequest(request : String, pertinent_docs : [number[], String[]]) : Map<String, Range[]> {
+        let finalMap : Map<String, Range[]> = new Map<String, Range[]>();
+        let list_names : String[] = pertinent_docs[1];
+        console.log("list_names : ")
+        console.log(list_names)
+        console.log("0 list names : ")
+        console.log(list_names[0])
+        console.log("0 documents_name : ")
+        console.log(this.documents_name[0])
+        let id_doc : number;
+        for (var i = 0; i < list_names.length; i++){
+            let list_range : Range[] = [];
+            id_doc = this.getIdDocument(list_names[i]);
+            list_range = this.searchRangesInDocument(request, this.documentLinesR.get(id_doc)!);
+            if (list_range.length>0){
+                finalMap.set(this.documents_name_invar[id_doc], list_range);
+            }
+        }
+
+        return finalMap;
+    }
 
     readJson(fileName: String) {
         this.stopwords = JSON.parse(fs.readFileSync(fileName, 'utf8'));
@@ -566,8 +601,10 @@ class LSA {
         return (i + 1)
     }
 
-    display_most_pertinent_documents(scores: number[], name_docs: String[], low: number, high: number) {
-        let tmp = [];
+    display_most_pertinent_documents(scores: number[], name_docs: String[], low: number, high: number) : [number[], String[]] {
+        let tmp : [number[], String[]] = [[],[]];
+        tmp.pop();
+        tmp.pop();
         if (low < high) {
             let p: number;
             p = this.partate(scores, name_docs, low, high);
