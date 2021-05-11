@@ -41,17 +41,18 @@ class LSA {
     stopwords: String[] = [];
     documents_name: String[] = [];
     dictionary = new Map<String, number[]>();
-    documentLines = new Map <number, [String, Range][]>();
+    documentLinesR = new Map <number, [String, Range][]>();
+    documentLinesS = new Map <number, String[]>();
 
     constructor() {
     }
 
     readRepository(dir: String) {
         let all_files = getAllFiles(dir, [])
-        console.log("_______________________")
-         console.log("all_files :" + all_files)
-         console.log("_______________________")
-       // all_files = all_files.filter(s => !s.includes("stopwords.json"))
+     //   console.log("_______________________")
+       //  console.log("all_files :" + all_files)
+      //   console.log("_______________________")
+        all_files = all_files.filter(s => !s.includes("stopwords.json"))
 
      //   all_files = all_files.filter(obj => (obj.includes("/src")))
         all_files.forEach(s => this.readDocument(s))
@@ -73,10 +74,19 @@ class LSA {
     }
 
     removeSpecialChars(documents: String[]): String[] {
+        let tmpDocumentLinesS : Map<number, String[]> = new Map<number, String[]>();
         for (var i = 0; i < documents.length; i++) {
-            documents[i] = documents[i].replace('\n', '');
-            documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '');
+            let listLines : String[] = [];
+            documents[i] = documents[i].replace('\n', ' ');
+            documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
+            for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
+                listLines.push(this.documentLinesS.get(i)![j])
+                listLines[j] =  listLines[j].replace('\n', '');
+                listLines[j] = listLines[j].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
+            }
+            tmpDocumentLinesS.set(i, listLines);
         }
+        this.documentLinesS = tmpDocumentLinesS;
         return documents;
     }
 
@@ -103,43 +113,38 @@ class LSA {
         return listStrings;
     }
 
+    
+    upperCaselinesS() {
+        let tmpDocumentLinesS : Map<number, String[]> = new Map<number, String[]>();
+        for (var i = 0; i < this.documents.length; i++) {
+            let listLines : String[] = [];
+            for(var j = 0; j < this.documentLinesS.get(i)!.length; j++){
+                listLines.push(this.documentLinesS.get(i)![j])
+                listLines[j] =  listLines[j].toUpperCase();
+            }
+            tmpDocumentLinesS.set(i, listLines);
+        }
+        this.documentLinesS = tmpDocumentLinesS;
+    }
+
     tokensGenerator(documents: String[]): String[][] {
         let documentsTokens: String[][] = [];
-    /*    let documentLines : Map <number, [String, Range][]> = new Map <number, [String, Range][]>(); 
-            for (var i = 0; i < documents.length; i++) {
-            let stringLine : String[] = this.documents[i].split("\n");
-            let stringRange : [String, Range][] = [];
-            for (var j = 0; j < stringLine.length; j++) {
-                let range : Range = new Range(new Position(j,0), 
-                new Position(j,stringLine[j].length));
-                stringRange.push([stringLine[j], range]);
-            }
-            documentLines.set(i, stringRange);
-        }
-                console.log("******************************")
-        console.log(documentLines)
-        console.log("******************************")
-        let dictionnaire : Map<String, Range> = new Map<String, Range>();
         for (var i = 0; i < documents.length; i++) {
-            for (var j = 0; j < documentLines.get(i)!.length; j++) {
-                let l : [String, Range] = documentLines.get(i)![j];
-                let s = l[0];
-                let r = l[1];
-                let listtokens : String[];
-                listtokens = s.split(" ");
-                let startChar = 0;
-                for (var k = 0; k < listtokens.length; k++) {
-                    let range : Range = new Range(new Position(r.start.line,
-                         startChar), new Position(r.start.line, listtokens[k].length));
-                    startChar = listtokens[k].length;
-                    dictionnaire.set(listtokens[k], range);
+            let dictionnaire : [String, Range][] = [];
+            for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
+                let line : String = this.documentLinesS.get(i)![j];
+                let tokensLine : String[] = line.split(" ")
+                let lastDepth = 0;
+                for (var k = 0; k < tokensLine.length; k++) {
+                    dictionnaire.push([tokensLine[k], new Range(new Position(j, lastDepth), new Position(j, tokensLine[k].length))]);
+                    lastDepth = tokensLine[k].length
                 }
             }
-            documentsTokens.push(documents[i].split(" "));
-        }*/
-     //   console.log("******************************")
-       // console.log(dictionnaire)
-       // console.log("******************************")
+            this.documentLinesR.set(i, dictionnaire)
+        }
+     //  console.log("******************************")
+        console.log(this.documentLinesR)
+      //  console.log("******************************")
         //-----
         for (var i = 0; i < documents.length; i++) {
             documentsTokens.push(documents[i].split(" "));
@@ -160,6 +165,7 @@ class LSA {
         let dictionary = new Map<String, number[]>();
         documents = this.removeSpecialChars(documents);
         documents = this.listStringsupperCase(documents);
+        this.upperCaselinesS();
         stopwords = this.listStringsupperCase(stopwords);
         let documentsTokens: String[][];
         documentsTokens = this.tokensGenerator(documents);
@@ -474,11 +480,9 @@ class LSA {
             new Position(j,stringLine[j].length));
             stringRange.push([stringLine[j], range]);
         }
-        this.documentLines.set(i, stringRange);
+        this.documentLinesS.set(i, stringLine);
+        this.documentLinesR.set(i, stringRange);
         }
-        console.log("#############################")
-        console.log(this.documentLines)
-        console.log("#############################")
     }
 
     lsa(request: String, dir : String, stop_file : String) {
@@ -487,10 +491,10 @@ class LSA {
         let matrixFinal: number[][] = [];
         this.documentLinesGenerator();
         this.dictionary = this.dictionarygenerator(this.documents, this.stopwords);
+        console.log("#############################")
         console.log(this.documents);
         console.log(this.stopwords);
         this.dictionary = this.removeWordsExpectIndexs(this.dictionary);
-        
         //console.log(this.dictionary);
         let matrix: number[][] = [];
         matrix = this.matrix(this.dictionary, this.documents);
