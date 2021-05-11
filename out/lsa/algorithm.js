@@ -2,6 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 // @ts-ignore
 const svd_js_1 = require("svd-js");
+// import getStdin from 'get-stdin';
+const vscode_1 = require("vscode");
+let p = new vscode_1.Position(2, 3);
+let q = new vscode_1.Position(4, 5);
+let r = new vscode_1.Range(p, q);
 var fs = require("fs");
 const path = require("path");
 const getAllFiles = function (dirPath, arrayOfFiles) {

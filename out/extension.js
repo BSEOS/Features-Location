@@ -14,13 +14,21 @@ exports.deactivate = exports.activate = void 0;
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require("vscode");
 const vscode_1 = require("vscode");
+const algorithm_1 = require("./algorithm");
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
     return __awaiter(this, void 0, void 0, function* () {
-        let map = new Map();
-        map.set("file", [new vscode_1.Range(new vscode_1.Position(2, 3), new vscode_1.Position(4, 6))]);
-        console.log(map.get("file"));
+        // algo.f()
+        let lsa_obj = new algorithm_1.LSA();
+        let req = "limit";
+        let dir = "/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability";
+        let stop_file = "/home/edwin/Desktop/Cours/S2/PSTL/features-location/Samples/stopwords.json";
+        let res = yield lsa_obj.lsa(req, dir, stop_file);
+        console.log(lsa_obj.documents_name);
+        // let map: Map<String, Range[]> = new Map<String, Range[]>();
+        // map.set("file", [new Range(new Position(2, 3), new Position(4, 6))]);
+        // console.log(map.get("file"))
         // Use the console to output diagnostic information (console.log) and errors (console.error)
         // This line of code will only be executed once when your extension is activated
         console.log('Congratulations, your extension "features-location" is now active!');
@@ -29,10 +37,9 @@ function activate(context) {
         // The commandId parameter must match the command field in package.json
         let disposable = vscode.commands.registerCommand('features-location.helloWorld', (fileUri) => __awaiter(this, void 0, void 0, function* () {
             vscode.window.showInformationMessage("hello");
-            let uri = vscode_1.Uri.file('/home/edwin/Desktop/vscode-feature-locator/Samples/document4.txt');
+            let uri = vscode_1.Uri.file('Samples/document4.txt');
             let r = new vscode_1.Range(new vscode_1.Position(0, 2), new vscode_1.Position(0, 12));
             let success = yield vscode.commands.executeCommand('vscode.executeInlineHintProvider', uri, r);
-            console.log(success);
         }));
         let disposable2 = vscode.commands.registerCommand('features-location.explore', (fileUri) => __awaiter(this, void 0, void 0, function* () {
             vscode.window.showInformationMessage(fileUri);
