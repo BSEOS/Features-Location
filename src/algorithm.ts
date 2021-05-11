@@ -92,7 +92,10 @@ class LSA {
 
     removeStopWords(documents: String[][], stopwords: String[]): String[][] {
         let tmp: String;
+        let tmp2: [String, Range];
+        let tmpDocumentLinesR : Map<number, [String, Range][]> = new Map<number, [String, Range][]>();
         for (var i = 0; i < documents.length; i++) {
+            let listtokens : [String, Range][] = this.documentLinesR.get(i)!;
             for (var j = 0; j < stopwords.length; j++) {
                 for (var k = 0; k < documents[i].length; k++) {
                     if (documents[i][k] == stopwords[j]) {
@@ -101,8 +104,18 @@ class LSA {
                         documents[i].pop();
                     }
                 }
+                // a verifier si il supprime le stop word
+                for (var x = 0; x < listtokens.length; x++) {
+                    if (listtokens[x][0] == stopwords[j]) {
+                        tmp2 = listtokens[listtokens.length-1];
+                        listtokens[x] = tmp2;
+                        listtokens.pop();
+                    }
+                }
             }
+            tmpDocumentLinesR.set(i, listtokens);
         }
+        this.documentLinesR = tmpDocumentLinesR;
         return documents;
     }
 
@@ -143,7 +156,7 @@ class LSA {
             this.documentLinesR.set(i, dictionnaire)
         }
      //  console.log("******************************")
-        console.log(this.documentLinesR)
+       // console.log(this.documentLinesR)
       //  console.log("******************************")
         //-----
         for (var i = 0; i < documents.length; i++) {
@@ -170,6 +183,9 @@ class LSA {
         let documentsTokens: String[][];
         documentsTokens = this.tokensGenerator(documents);
         documentsTokens = this.removeStopWords(documentsTokens, stopwords);
+        console.log('-----------------------')
+        console.log(this.documentLinesR)
+        console.log('-----------------------')
         for (var i = 0; i < documentsTokens.length; i++) {
             for (var j = 0; j < documentsTokens[i].length; j++) {
                 if (dictionary.has(documentsTokens[i][j])) {
