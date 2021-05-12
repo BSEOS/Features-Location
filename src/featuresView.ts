@@ -287,7 +287,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         if (element?.type == vscode.FileType.File) {
             let r: Range[] | undefined = this.docRanges.get(element.uri.path);
             let res: Entry[] = r ? r.map(rang => ({ uri: element.uri, type: undefined, isRange: true, range: rang })) : []
-            
+
             return res;
         }
 
@@ -321,24 +321,26 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
     }
 
     getTreeItem(element: Entry): vscode.TreeItem {
-        // if (element.uri.path.includes("back")) {
-        //     return new vscode.TreeItem("")
-        // }
         if (element.isRange) {
 
             let treeItem = new vscode.TreeItem(this.rangeToString(element.range));
             treeItem.description = "Range";
+            treeItem.command = { command: 'fileExplorer.openFileRange', title: "Open File Range", arguments: [element.uri, element.range] };
 
+            treeItem.iconPath = new vscode.ThemeIcon("location");
             return treeItem;
         }
         else {
             const treeItem = new vscode.TreeItem(element.uri, element.type === vscode.FileType.Directory ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.Collapsed);
             if (element.type === vscode.FileType.File) {
-                treeItem.command = { command: 'fileExplorer.openFile', title: "Open File", arguments: [element.uri], };
                 treeItem.contextValue = 'file';
-                treeItem.description = "File";
+                treeItem.command = { command: 'fileExplorer.openFile', title: "Open File", arguments: [element.uri] };
+
+                // treeItem.description = "File";
+                treeItem.iconPath = new vscode.ThemeIcon("file-code");
             } else {
-                treeItem.description = "Folder";
+                // treeItem.description = "Folder";
+                treeItem.iconPath = new vscode.ThemeIcon("folder-opened");
             }
             return treeItem;
         }
@@ -349,11 +351,21 @@ export class FeaturesLocator {
     constructor(context: vscode.ExtensionContext, docRanges: Map<String, Range[]>) {
         const treeDataProvider = new FileSystemProvider(docRanges);
         context.subscriptions.push(vscode.window.createTreeView('featuresView', { treeDataProvider }));
-        let disp = vscode.commands.registerCommand('fileExplorer.openFile', (resource) => this.openResource(resource));
-        context.subscriptions.push(disp);
+        let disp1 = vscode.commands.registerCommand('fileExplorer.openFile', (resource) => this.openResource(resource));
+        let disp2 = vscode.commands.registerCommand('fileExplorer.openFileRange', (resource, range) => this.openFileRange(resource,range));
+        context.subscriptions.push(disp1);
+        context.subscriptions.push(disp2);
+    }
+
+    private openFileRange(resource: vscode.Uri, range: Range): void {
+        const opts: vscode.TextDocumentShowOptions = {
+            selection: range
+        };
+        vscode.window.showTextDocument(resource, opts);
     }
 
     private openResource(resource: vscode.Uri): void {
+
         vscode.window.showTextDocument(resource);
     }
 }
