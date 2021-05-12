@@ -19,13 +19,13 @@ export async function activate(context: vscode.ExtensionContext) {
         curPath = vscode.workspace.workspaceFolders[0].uri.path;
     }
 
-    let lsa_obj = new LSA()
-    let req = "LIMIT"
-    let dir = curPath
-    let stop_file = "/home/edwin/Desktop/Cours/S2/PSTL/features-location/Samples/stopwords.json"
-    let res = await lsa_obj.lsa(req, dir, stop_file)
-    console.log("^^^^^^^^^^^^^^^^^^")
-    console.log(lsa_obj.documents_name)
+    // let lsa_obj = new LSA()
+    // let req = "LIMIT"
+    // let dir = curPath
+    // let stop_file = "/home/edwin/Desktop/Cours/S2/PSTL/features-location/Samples/stopwords.json"
+    // let res = await lsa_obj.lsa(req, dir, stop_file)
+    // console.log("^^^^^^^^^^^^^^^^^^")
+    // console.log(lsa_obj.documents_name)
 
 
 

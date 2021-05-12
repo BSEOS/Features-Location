@@ -265,23 +265,22 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 
     // tree data provider
 
+    filterChildren(children: [string, vscode.FileType][], fsPath: string): Entry[] {
+        let res: Entry[] = [];
+        for (let c of children) {
+            let name: string = c[0];
+            let tp: vscode.FileType = c[1];
+            if (this.docs.find(d => d.includes(name))) {
+                res.push({ uri: vscode.Uri.file(path.join(fsPath, name)), type: tp })
+            }
+        }
+        return res;
+    }
+
     async getChildren(element?: Entry): Promise<Entry[]> {
         if (element) {
             const children = await this.readDirectory(element.uri);
-
-            let res: Entry[] = [];
-            for (let c of children) {
-                let tp: vscode.FileType = c[1];
-                if (this.docs.filter(d => d.includes(c[0])).length > 0) {
-                    res.push({ uri: vscode.Uri.file(path.join(element.uri.fsPath, c[0])), type: tp })
-                }
-            }
-            return res;
-            // return children.map(([name, type]) => (
-
-            //     {
-            //         uri: vscode.Uri.file(path.join(element.uri.fsPath, name)), type
-            //     }));
+            return this.filterChildren(children, element.uri.fsPath);
         }
 
         const workspaceFolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
@@ -293,7 +292,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
                 }
                 return a[1] === vscode.FileType.Directory ? -1 : 1;
             });
-            return children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, name)), type }));
+
+            return this.filterChildren(children, workspaceFolder.uri.fsPath);
         }
 
         return [];
