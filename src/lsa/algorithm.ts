@@ -150,7 +150,7 @@ class LSA {
                 let tokensLine : String[] = line.split(" ")
                // let lastDepth = 0;
                 for (var k = 0; k < tokensLine.length; k++) {
-                    dictionnaire.push([tokensLine[k], new Range(new Position(j, 0), new Position(j, this.documentLinesS.get(i)!.length))]);
+                    dictionnaire.push([tokensLine[k], new Range(new Position(j+1, 0), new Position(j+1, this.documentLinesS.get(i)!.length))]);
                   //  lastDepth = tokensLine[k].length
                 }
             }
