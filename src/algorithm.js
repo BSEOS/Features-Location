@@ -26,20 +26,27 @@ var __read = (this && this.__read) || function (o, n) {
     }
     return ar;
 };
-var __spread = (this && this.__spread) || function () {
-    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
-    return ar;
+var __spreadArray = (this && this.__spreadArray) || function (to, from) {
+    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
+        to[j] = from[i];
+    return to;
 };
 exports.__esModule = true;
+exports.LSA = exports.f = void 0;
 // @ts-ignore
 var svd_js_1 = require("svd-js");
 // import getStdin from 'get-stdin';
 var vscode_1 = require("vscode");
-var p = new vscode_1.Position(2, 3);
-var q = new vscode_1.Position(4, 5);
-var r = new vscode_1.Range(p, q);
+var f = function () {
+    var p = new vscode_1.Position(2, 3);
+    var q = new vscode_1.Position(4, 5);
+    var r = new vscode_1.Range(p, q);
+    console.log(r);
+};
+exports.f = f;
 var fs = require("fs");
 var path = require("path");
+var readline = require('readline-sync');
 var getAllFiles = function (dirPath, arrayOfFiles) {
     var files = fs.readdirSync(dirPath);
     arrayOfFiles = arrayOfFiles || [];
@@ -53,14 +60,14 @@ var getAllFiles = function (dirPath, arrayOfFiles) {
     });
     return arrayOfFiles;
 };
-var Lsa = /** @class */ (function () {
-    function Lsa() {
+var LSA = /** @class */ (function () {
+    function LSA() {
         this.documents = [];
         this.stopwords = [];
         this.documents_name = [];
         this.dictionary = new Map();
     }
-    Lsa.prototype.readRepository = function (dir) {
+    LSA.prototype.readRepository = function (dir) {
         var _this = this;
         var all_files = getAllFiles(dir, []);
         // console.log("all_files :" + all_files)
@@ -68,12 +75,12 @@ var Lsa = /** @class */ (function () {
         all_files = all_files.filter(function (obj) { return (obj.includes("/src")); });
         all_files.forEach(function (s) { return _this.readDocument(s); });
     };
-    Lsa.prototype.readDocument = function (fileName) {
+    LSA.prototype.readDocument = function (fileName) {
         var document = fs.readFileSync(fileName, 'utf8');
         this.documents.push(document);
         this.documents_name.push(fileName);
     };
-    Lsa.prototype.concatLisStrings = function (listStrings) {
+    LSA.prototype.concatLisStrings = function (listStrings) {
         var e_1, _a;
         var finalString = "";
         try {
@@ -91,14 +98,14 @@ var Lsa = /** @class */ (function () {
         }
         return finalString;
     };
-    Lsa.prototype.removeSpecialChars = function (documents) {
+    LSA.prototype.removeSpecialChars = function (documents) {
         for (var i = 0; i < documents.length; i++) {
             documents[i] = documents[i].replace('\n', '');
             documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '');
         }
         return documents;
     };
-    Lsa.prototype.removeStopWords = function (documents, stopwords) {
+    LSA.prototype.removeStopWords = function (documents, stopwords) {
         var tmp;
         for (var i = 0; i < documents.length; i++) {
             for (var j = 0; j < stopwords.length; j++) {
@@ -113,20 +120,20 @@ var Lsa = /** @class */ (function () {
         }
         return documents;
     };
-    Lsa.prototype.listStringsupperCase = function (listStrings) {
+    LSA.prototype.listStringsupperCase = function (listStrings) {
         for (var i = 0; i < listStrings.length; i++) {
             listStrings[i] = listStrings[i].toUpperCase();
         }
         return listStrings;
     };
-    Lsa.prototype.tokensGenerator = function (documents) {
+    LSA.prototype.tokensGenerator = function (documents) {
         var documentsTokens = [];
         for (var i = 0; i < documents.length; i++) {
             documentsTokens.push(documents[i].split(" "));
         }
         return documentsTokens;
     };
-    Lsa.prototype.removeWordsExpectIndexs = function (dictionary) {
+    LSA.prototype.removeWordsExpectIndexs = function (dictionary) {
         var e_2, _a;
         try {
             for (var _b = __values(dictionary.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -145,7 +152,7 @@ var Lsa = /** @class */ (function () {
         }
         return dictionary;
     };
-    Lsa.prototype.dictionarygenerator = function (documents, stopwords) {
+    LSA.prototype.dictionarygenerator = function (documents, stopwords) {
         var dictionary = new Map();
         documents = this.removeSpecialChars(documents);
         documents = this.listStringsupperCase(documents);
@@ -166,9 +173,9 @@ var Lsa = /** @class */ (function () {
                 }
             }
         }
-        return new Map(__spread(dictionary).sort());
+        return new Map(__spreadArray([], __read(dictionary)).sort());
     };
-    Lsa.prototype.matrix = function (dictionary, document) {
+    LSA.prototype.matrix = function (dictionary, document) {
         var e_3, _a, e_4, _b;
         var matrix = [];
         try {
@@ -211,7 +218,7 @@ var Lsa = /** @class */ (function () {
         }
         return matrix;
     };
-    Lsa.prototype.matrixGenerator = function (dictionary, document) {
+    LSA.prototype.matrixGenerator = function (dictionary, document) {
         var e_5, _a;
         var matrix = new Map();
         try {
@@ -256,7 +263,7 @@ var Lsa = /** @class */ (function () {
         }
         return matrix;
     };
-    Lsa.prototype.numberWordsInDocument = function (matrix, index) {
+    LSA.prototype.numberWordsInDocument = function (matrix, index) {
         var e_6, _a;
         var cpt = 0;
         try {
@@ -279,7 +286,7 @@ var Lsa = /** @class */ (function () {
         }
         return cpt;
     };
-    Lsa.prototype.TFIDF = function (matrix) {
+    LSA.prototype.TFIDF = function (matrix) {
         var e_7, _a;
         try {
             for (var _b = __values(this.dictionary.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -307,7 +314,7 @@ var Lsa = /** @class */ (function () {
         }
         return matrix;
     };
-    Lsa.prototype.printMatrix = function (matrix) {
+    LSA.prototype.printMatrix = function (matrix) {
         var ligne = "";
         for (var i = 0; i < matrix.length; i++) {
             for (var j = 0; j < matrix[i].length; j++) {
@@ -317,17 +324,17 @@ var Lsa = /** @class */ (function () {
             ligne = "";
         }
     };
-    Lsa.prototype.sliceMatrixCarree = function (matrix, from, end) {
+    LSA.prototype.sliceMatrixCarree = function (matrix, from, end) {
         matrix = matrix.slice(from, end);
         for (var i = 0; i < end; i++) {
             matrix[i] = matrix[i].slice(from, end);
         }
         return matrix;
     };
-    Lsa.prototype.sliceMatrixRect = function (matrix, numberLines) {
+    LSA.prototype.sliceMatrixRect = function (matrix, numberLines) {
         return matrix.slice(0, numberLines);
     };
-    Lsa.prototype.vectorToOrthMatrix = function (vector) {
+    LSA.prototype.vectorToOrthMatrix = function (vector) {
         var matrix = [];
         for (var i = 0; i < vector.length; i++) {
             var ligne = [];
@@ -344,10 +351,10 @@ var Lsa = /** @class */ (function () {
         }
         return matrix;
     };
-    Lsa.prototype.transposeMatrix = function (matrix) {
+    LSA.prototype.transposeMatrix = function (matrix) {
         return matrix[0].map(function (_, colIndex) { return matrix.map(function (row) { return row[colIndex]; }); });
     };
-    Lsa.prototype.multiplyMatrixs = function (matrix1, matrix2) {
+    LSA.prototype.multiplyMatrixs = function (matrix1, matrix2) {
         var numberRows1 = matrix1.length, numberCols1 = matrix1[0].length, numberRows2 = matrix2.length, numberCols2 = matrix2[0].length, matrix = new Array(numberRows1);
         for (var r = 0; r < numberRows1; ++r) {
             matrix[r] = new Array(numberCols2); // initialize the current row
@@ -360,7 +367,7 @@ var Lsa = /** @class */ (function () {
         }
         return matrix;
     };
-    Lsa.prototype.index_of_key_in_map = function (mot_cle) {
+    LSA.prototype.index_of_key_in_map = function (mot_cle) {
         var e_8, _a;
         var indice = 0;
         try {
@@ -381,7 +388,7 @@ var Lsa = /** @class */ (function () {
         }
         return -1;
     };
-    Lsa.prototype.contient = function (list, chaine) {
+    LSA.prototype.contient = function (list, chaine) {
         var e_9, _a;
         try {
             for (var list_1 = __values(list), list_1_1 = list_1.next(); !list_1_1.done; list_1_1 = list_1.next()) {
@@ -399,7 +406,7 @@ var Lsa = /** @class */ (function () {
         }
         return false;
     };
-    Lsa.prototype.generator_query_vector = function (mot_cles) {
+    LSA.prototype.generator_query_vector = function (mot_cles) {
         var e_10, _a;
         var tokens_mots_cle;
         tokens_mots_cle = mot_cles.split(" ");
@@ -424,7 +431,7 @@ var Lsa = /** @class */ (function () {
         }
         return query;
     };
-    Lsa.prototype.invers_matrix = function (M) {
+    LSA.prototype.invers_matrix = function (M) {
         if (M.length !== M[0].length) {
             return [];
         }
@@ -482,21 +489,21 @@ var Lsa = /** @class */ (function () {
         }
         return I;
     };
-    Lsa.prototype.slice_matrix_verticaly = function (matrix) {
+    LSA.prototype.slice_matrix_verticaly = function (matrix) {
         var tmp = [];
         for (var i = 0; i < matrix.length; i++) {
             tmp.push(matrix[i].slice(0, 2));
         }
         return tmp;
     };
-    Lsa.prototype.transposeVector = function (query) {
+    LSA.prototype.transposeVector = function (query) {
         var tmp = [];
         for (var i = 0; i < query.length; i++) {
             tmp.push([query[i]]);
         }
         return tmp;
     };
-    Lsa.prototype.multiply_vector_matrix = function (vector, matrix) {
+    LSA.prototype.multiply_vector_matrix = function (vector, matrix) {
         var tmp = [];
         console.log(vector);
         for (var i = 0; i < matrix.length; i++) {
@@ -513,25 +520,28 @@ var Lsa = /** @class */ (function () {
         }
         return tmp;
     };
-    Lsa.prototype.calcul_query_coords = function (q, u, s) {
+    LSA.prototype.calcul_query_coords = function (q, u, s) {
         var res = [];
         var u_inv = this.invers_matrix(u);
         res = this.multiplyMatrixs(s, u_inv);
         return this.multiply_vector_matrix(q, res);
     };
-    Lsa.prototype.cosinus_similarity = function (q, d) {
+    LSA.prototype.cosinus_similarity = function (q, d) {
         var dot_product = ((q[0] * d[0]) + (q[1] * d[1]));
         var product_modulus = (Math.sqrt((q[0] * q[0]) + (q[1] * q[1])) * Math.sqrt((d[0] * d[0]) + (d[1] * d[1])));
         return dot_product / product_modulus;
     };
-    Lsa.prototype.score_documents_generator = function (q, matrixV) {
+    LSA.prototype.score_documents_generator = function (q, matrixV) {
         var tmp = [];
         for (var i = 0; i < matrixV.length; i++) {
             tmp.push(this.cosinus_similarity(q, matrixV[i]));
         }
         return tmp;
     };
-    Lsa.prototype.lsa = function () {
+    LSA.prototype.lsa = function (request, dir, stop_file) {
+        this.readJson(stop_file);
+        // let dir = "/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability"
+        this.readRepository(dir);
         var matrixFinal = [];
         this.dictionary = this.dictionarygenerator(this.documents, this.stopwords);
         this.dictionary = this.removeWordsExpectIndexs(this.dictionary);
@@ -545,7 +555,8 @@ var Lsa = /** @class */ (function () {
         var matrixU = u;
         matrixV = this.slice_matrix_verticaly(matrixV);
         console.log(matrixV);
-        var mot_cles = readline.question("Veuillez saisir votre recherche : ");
+        // var mot_cles: String = readline.question("Veuillez saisir votre recherche : ");
+        var mot_cles = request;
         var query = this.generator_query_vector(mot_cles.toUpperCase());
         var querry_coor = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
         console.log(querry_coor);
@@ -557,10 +568,10 @@ var Lsa = /** @class */ (function () {
         matrixFinal = this.multiplyMatrixs(matrixQ, matrixV);
         return matrixFinal[0];
     };
-    Lsa.prototype.readJson = function (fileName) {
+    LSA.prototype.readJson = function (fileName) {
         this.stopwords = JSON.parse(fs.readFileSync(fileName, 'utf8'));
     };
-    Lsa.prototype.partate = function (scores, name_docs, low, high) {
+    LSA.prototype.partate = function (scores, name_docs, low, high) {
         var pivot = scores[high];
         var i = (low - 1);
         for (var j = low; j <= high - 1; j++) {
@@ -582,26 +593,21 @@ var Lsa = /** @class */ (function () {
         name_docs[i + 1] = tempN2;
         return (i + 1);
     };
-    Lsa.prototype.display_most_pertinent_documents = function (scores, name_docs, low, high) {
+    LSA.prototype.display_most_pertinent_documents = function (scores, name_docs, low, high) {
         var tmp = [];
         if (low < high) {
-            var p_1;
-            p_1 = this.partate(scores, name_docs, low, high);
-            this.display_most_pertinent_documents(scores, name_docs, low, p_1 - 1);
-            this.display_most_pertinent_documents(scores, name_docs, p_1 + 1, high);
+            var p = void 0;
+            p = this.partate(scores, name_docs, low, high);
+            this.display_most_pertinent_documents(scores, name_docs, low, p - 1);
+            this.display_most_pertinent_documents(scores, name_docs, p + 1, high);
         }
         tmp.push(scores);
         tmp.push(name_docs);
         return tmp;
     };
-    return Lsa;
+    return LSA;
 }());
-var readline = require('readline-sync');
-var docs = new Lsa();
-docs.readJson('./Samples/stopwords.json');
-var dir = "/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability";
-docs.readRepository(dir);
-var matrixResult = docs.lsa();
+exports.LSA = LSA;
 // console.log(docs.documents_name)
 //console.log(matrixResult);
 /* comments in lsa

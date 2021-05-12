@@ -17,8 +17,8 @@ export async function activate(context: vscode.ExtensionContext) {
     // algo.f()
     let lsa_obj = new LSA()
     let req = "limit"
-    let dir = "/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability"
-    let stop_file = "/home/edwin/Desktop/Cours/S2/PSTL/features-location/Samples/stopwords.json"
+    let dir = "C:/Users/BUYMORE/Pictures/sorbonne/PSTL/BankWebWithVariability/backend/src"
+    let stop_file = "C:/Users/BUYMORE/Pictures/sorbonne/PSTL/git2/Features-Location/Samples/stopwords.json"
     let res = await lsa_obj.lsa(req, dir, stop_file)
     console.log(lsa_obj.documents_name)
 

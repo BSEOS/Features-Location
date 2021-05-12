@@ -40,17 +40,22 @@ class LSA {
     documents: String[] = [];
     stopwords: String[] = [];
     documents_name: String[] = [];
+    documents_name_invar: String[] = [];
     dictionary = new Map<String, number[]>();
+    documentLinesR = new Map <number, [String, Range][]>();
+    documentLinesS = new Map <number, String[]>();
 
     constructor() {
     }
 
     readRepository(dir: String) {
         let all_files = getAllFiles(dir, [])
-        // console.log("all_files :" + all_files)
+     //   console.log("_______________________")
+       //  console.log("all_files :" + all_files)
+      //   console.log("_______________________")
         all_files = all_files.filter(s => !s.includes("stopwords.json"))
 
-        all_files = all_files.filter(obj => (obj.includes("/src")))
+     //   all_files = all_files.filter(obj => (obj.includes("/src")))
         all_files.forEach(s => this.readDocument(s))
     }
 
@@ -58,6 +63,7 @@ class LSA {
         let document: String = fs.readFileSync(fileName, 'utf8');
         this.documents.push(document);
         this.documents_name.push(fileName);
+        this.documents_name_invar.push(fileName);
     }
 
 
@@ -70,16 +76,28 @@ class LSA {
     }
 
     removeSpecialChars(documents: String[]): String[] {
+        let tmpDocumentLinesS : Map<number, String[]> = new Map<number, String[]>();
         for (var i = 0; i < documents.length; i++) {
-            documents[i] = documents[i].replace('\n', '');
-            documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '');
+            let listLines : String[] = [];
+            documents[i] = documents[i].replace('\n', ' ');
+            documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
+            for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
+                listLines.push(this.documentLinesS.get(i)![j])
+                listLines[j] =  listLines[j].replace('\n', '');
+                listLines[j] = listLines[j].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
+            }
+            tmpDocumentLinesS.set(i, listLines);
         }
+        this.documentLinesS = tmpDocumentLinesS;
         return documents;
     }
 
     removeStopWords(documents: String[][], stopwords: String[]): String[][] {
         let tmp: String;
+        let tmp2: [String, Range];
+        let tmpDocumentLinesR : Map<number, [String, Range][]> = new Map<number, [String, Range][]>();
         for (var i = 0; i < documents.length; i++) {
+            let listtokens : [String, Range][] = this.documentLinesR.get(i)!;
             for (var j = 0; j < stopwords.length; j++) {
                 for (var k = 0; k < documents[i].length; k++) {
                     if (documents[i][k] == stopwords[j]) {
@@ -88,8 +106,17 @@ class LSA {
                         documents[i].pop();
                     }
                 }
+                for (var x = 0; x < listtokens.length; x++) {
+                    if (listtokens[x][0] == stopwords[j]) {
+                        tmp2 = listtokens[listtokens.length-1];
+                        listtokens[x] = tmp2;
+                        listtokens.pop();
+                    }
+                }
             }
+            tmpDocumentLinesR.set(i, listtokens);
         }
+        this.documentLinesR = tmpDocumentLinesR;
         return documents;
     }
 
@@ -100,8 +127,35 @@ class LSA {
         return listStrings;
     }
 
+    
+    upperCaselinesS() {
+        let tmpDocumentLinesS : Map<number, String[]> = new Map<number, String[]>();
+        for (var i = 0; i < this.documents.length; i++) {
+            let listLines : String[] = [];
+            for(var j = 0; j < this.documentLinesS.get(i)!.length; j++){
+                listLines.push(this.documentLinesS.get(i)![j])
+                listLines[j] =  listLines[j].toUpperCase();
+            }
+            tmpDocumentLinesS.set(i, listLines);
+        }
+        this.documentLinesS = tmpDocumentLinesS;
+    }
+
     tokensGenerator(documents: String[]): String[][] {
         let documentsTokens: String[][] = [];
+        for (var i = 0; i < documents.length; i++) {
+            let dictionnaire : [String, Range][] = [];
+            for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
+                let line : String = this.documentLinesS.get(i)![j];
+                let tokensLine : String[] = line.split(" ")
+                let lastDepth = 0;
+                for (var k = 0; k < tokensLine.length; k++) {
+                    dictionnaire.push([tokensLine[k], new Range(new Position(j, lastDepth), new Position(j, tokensLine[k].length))]);
+                    lastDepth = tokensLine[k].length
+                }
+            }
+            this.documentLinesR.set(i, dictionnaire)
+        }
         for (var i = 0; i < documents.length; i++) {
             documentsTokens.push(documents[i].split(" "));
         }
@@ -121,6 +175,7 @@ class LSA {
         let dictionary = new Map<String, number[]>();
         documents = this.removeSpecialChars(documents);
         documents = this.listStringsupperCase(documents);
+        this.upperCaselinesS();
         stopwords = this.listStringsupperCase(stopwords);
         let documentsTokens: String[][];
         documentsTokens = this.tokensGenerator(documents);
@@ -208,7 +263,7 @@ class LSA {
         return cpt;
     }
 
-    TFIDF(matrix: Map<String, [number, number][]>): Map<String, [number, number][]> {
+   /* TFIDF(matrix: Map<String, [number, number][]>): Map<String, [number, number][]> {
         for (let key of this.dictionary.keys()) {
             let list: [number, number][];
             list = (matrix.get(key)!);
@@ -224,7 +279,40 @@ class LSA {
             }
         }
         return matrix;
-    }
+    }*/
+
+        countColomnes(matrix: number[][], index: number) : number{
+            let res : number = 0;
+            for (var i = 0; i < matrix.length; i++) {
+                res = res + matrix[i][index];
+            }      
+            return res;
+        }
+
+        countNumberDocumentsAppearWord(matrix: number[][], index: number): number{
+            let res : number = 0;
+            for (var i = 0; i < this.documents.length; i++) {
+                if (matrix[index][i] > 0){
+                    res++;
+                }
+            }      
+            return res;
+        }
+
+       TFIDF(matrix: number[][]): number[][] {
+        for (var i = 0; i < matrix.length; i++) {
+            for (var j = 0; j < matrix[i].length; j++) {
+                let Nij: number = matrix[i][j];
+                let Nj: number = this.countColomnes(matrix, j);
+                let D: number = this.documents.length;
+                let Di: number = this.countNumberDocumentsAppearWord(matrix, i);
+                let calclog: number = (Math.log(D / Di));
+                let calcN: number = Nij / Nj;
+                matrix[i][j] = parseFloat((calcN * calclog).toPrecision(2));
+            }  
+        }
+           return matrix;
+       }
 
     printMatrix(matrix: number[][]) {
         let ligne: String = "";
@@ -426,17 +514,36 @@ class LSA {
         return tmp;
     }
 
+    documentLinesGenerator(){
+        for (var i = 0; i < this.documents.length; i++) {
+        let stringLine : String[] = this.documents[i].split("\n");
+        let stringRange : [String, Range][] = [];
+        for (var j = 0; j < stringLine.length; j++) {
+            let range : Range = new Range(new Position(j,0), 
+            new Position(j,stringLine[j].length));
+            stringRange.push([stringLine[j], range]);
+        }
+        this.documentLinesS.set(i, stringLine);
+        this.documentLinesR.set(i, stringRange);
+        }
+    }
+
     lsa(request: String, dir : String, stop_file : String) {
         this.readJson(stop_file);
-        // let dir = "/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability"
         this.readRepository(dir)
-
         let matrixFinal: number[][] = [];
+        this.documentLinesGenerator();
         this.dictionary = this.dictionarygenerator(this.documents, this.stopwords);
         this.dictionary = this.removeWordsExpectIndexs(this.dictionary);
-        console.log(this.dictionary);
+        //console.log(this.dictionary);
         let matrix: number[][] = [];
         matrix = this.matrix(this.dictionary, this.documents);
+      //  console.log(this.documents_name)
+     //   console.log("before TFIDF : ")
+     //   console.log(matrix)
+     //   console.log("after TFIDF : ")
+        matrix = this.TFIDF(matrix);
+        console.log(matrix)
         const { u, v, q } = SVD(matrix);
         let matrixQ = this.vectorToOrthMatrix(q);
         matrixQ = this.sliceMatrixCarree(matrixQ, 0, 2);
@@ -446,21 +553,68 @@ class LSA {
         console.log(matrixV);
         // var mot_cles: String = readline.question("Veuillez saisir votre recherche : ");
         var mot_cles = request
-
         let query = this.generator_query_vector(mot_cles.toUpperCase());
         let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
+       console.log("querry  : ************");
         console.log(querry_coor);
         let scores = this.score_documents_generator(querry_coor, matrixV)
-        console.log("scores : " + scores);
-        let name_docs = this.documents_name;
-        console.log("names : " + name_docs);
-        console.log(this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1));
+       // console.log("scores : " + scores);
+        var name_docs = this.documents_name;
+      //  console.log("names : " + name_docs);
+        let pertinent_docs : [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
+        console.log("pertinent_docs=================");
+        console.log(pertinent_docs);
+        let finalMap : Map<String, Range[]> = this.generateRangesRequest(request, pertinent_docs);
+        console.log("======================================")
+        console.log(finalMap)
+        console.log("======================================")
         matrixFinal = this.multiplyMatrixs(matrixQ, matrixV,);
-
         return matrixFinal[0]
     }
 
+    getIdDocument(name : String) : number {
+        for(var i = 0; i < this.documents_name.length; i++){
+            if (this.documents_name_invar[i] == name){
+                return i;
+            }
+        }
+        return -1;
+    }
 
+    searchRangesInDocument(request : String, list : [String, Range][]) : Range[]{
+        let list_range : Range[] = [];
+        let tokens_request : String[] = request.split(' ');
+        for (var j = 0; j < tokens_request.length; j++){
+            for (var i = 0; i < list.length; i++){
+                if (tokens_request[j] == list[i][0]){
+                    list_range.push(list[i][1]);
+                }
+            } 
+        } 
+        return list_range
+    }
+
+    generateRangesRequest(request : String, pertinent_docs : [number[], String[]]) : Map<String, Range[]> {
+        let finalMap : Map<String, Range[]> = new Map<String, Range[]>();
+        let list_names : String[] = pertinent_docs[1];
+        console.log("list_names : ")
+        console.log(list_names)
+        console.log("0 list names : ")
+        console.log(list_names[0])
+        console.log("0 documents_name : ")
+        console.log(this.documents_name[0])
+        let id_doc : number;
+        for (var i = 0; i < list_names.length; i++){
+            let list_range : Range[] = [];
+            id_doc = this.getIdDocument(list_names[i]);
+            list_range = this.searchRangesInDocument(request, this.documentLinesR.get(id_doc)!);
+            if (list_range.length>0){
+                finalMap.set(this.documents_name_invar[id_doc], list_range);
+            }
+        }
+
+        return finalMap;
+    }
 
     readJson(fileName: String) {
         this.stopwords = JSON.parse(fs.readFileSync(fileName, 'utf8'));
@@ -489,8 +643,10 @@ class LSA {
         return (i + 1)
     }
 
-    display_most_pertinent_documents(scores: number[], name_docs: String[], low: number, high: number) {
-        let tmp = [];
+    display_most_pertinent_documents(scores: number[], name_docs: String[], low: number, high: number) : [number[], String[]] {
+        let tmp : [number[], String[]] = [[],[]];
+        tmp.pop();
+        tmp.pop();
         if (low < high) {
             let p: number;
             p = this.partate(scores, name_docs, low, high);
