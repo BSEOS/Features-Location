@@ -3,7 +3,10 @@ node_modules
 npm-debug.log
 Thumbs.db
 */node_modules/
-*/out/
+**/out/*
+/out/*
+/out/
+out/
 */.vs/
 *.lsif
 *.db
