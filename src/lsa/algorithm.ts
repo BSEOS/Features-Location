@@ -528,7 +528,7 @@ class LSA {
         }
     }
 
-    lsa(request: String, dir : String, stop_file : String) {
+    lsa(request: String, dir : String, stop_file : String) : Map<String, Range[]>{
         this.readJson(stop_file);
         this.readRepository(dir)
         let matrixFinal: number[][] = [];
@@ -569,7 +569,7 @@ class LSA {
         console.log(finalMap)
         console.log("======================================")
         matrixFinal = this.multiplyMatrixs(matrixQ, matrixV,);
-        return matrixFinal[0]
+        return finalMap
     }
 
     getIdDocument(name : String) : number {
@@ -584,13 +584,16 @@ class LSA {
     searchRangesInDocument(request : String, list : [String, Range][]) : Range[]{
         let list_range : Range[] = [];
         let tokens_request : String[] = request.split(' ');
-        for (var j = 0; j < tokens_request.length; j++){
+        var unique = tokens_request.filter(function(elem, index, self) {
+            return index === self.indexOf(elem);
+        })
+        for (var j = 0; j < unique.length; j++){
             for (var i = 0; i < list.length; i++){
-                if (tokens_request[j] == list[i][0]){
+                if (unique[j] == list[i][0]){
                     list_range.push(list[i][1]);
                 }
             } 
-        } 
+        }
         return list_range
     }
 
