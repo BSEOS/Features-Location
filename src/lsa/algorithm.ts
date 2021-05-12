@@ -300,15 +300,22 @@ class LSA {
         }
 
        TFIDF(matrix: number[][]): number[][] {
+        let keys = Array.from(this.dictionary.keys());
+        let Nj : number[] = []
         for (var i = 0; i < matrix.length; i++) {
+            let Di = this.dictionary.get(keys[i])!.filter(function(elem, index, self) {
+                return index === self.indexOf(elem);
+            }).length
+            let D: number = this.documents.length;
             for (var j = 0; j < matrix[i].length; j++) {
+                if(i == 0){
+                    Nj[j]= this.countColomnes(matrix, j);
+                }
                 let Nij: number = matrix[i][j];
-                let Nj: number = this.countColomnes(matrix, j);
-                let D: number = this.documents.length;
-                let Di: number = this.countNumberDocumentsAppearWord(matrix, i);
+              //  let Di: number = this.countNumberDocumentsAppearWord(matrix, i);
                 let calclog: number = (Math.log(D / Di));
-                let calcN: number = Nij / Nj;
-                matrix[i][j] = parseFloat((calcN * calclog).toPrecision(2));
+                let calcN: number = Nij / Nj[j];
+                matrix[i][j] = (calcN * calclog);
             }  
         }
            return matrix;
@@ -539,9 +546,9 @@ class LSA {
         let matrix: number[][] = [];
         matrix = this.matrix(this.dictionary, this.documents);
       //  console.log(this.documents_name)
-     //   console.log("before TFIDF : ")
-     //   console.log(matrix)
-     //   console.log("after TFIDF : ")
+        console.log("before TFIDF : ")
+        console.log(matrix)
+        console.log("after TFIDF : ")
         matrix = this.TFIDF(matrix);
         console.log(matrix)
         const { u, v, q } = SVD(matrix);
@@ -550,7 +557,7 @@ class LSA {
         let matrixV = v;
         let matrixU = u;
         matrixV = this.slice_matrix_verticaly(matrixV);
-        console.log(matrixV);
+      //  console.log(matrixV);
         // var mot_cles: String = readline.question("Veuillez saisir votre recherche : ");
         var mot_cles = request
         let query = this.generator_query_vector(mot_cles.toUpperCase());
@@ -683,10 +690,8 @@ export { LSA }
             [0,1,0,0,1,1,0,0], [0,1,1,0,1,1,0,0], [0,0,0,0,1,1,0,0], [0,0,0,0,1,0,1,0],
             [0,0,0,0,1,0,1,1]
         ];
-
         let matrix : number[][]= [
             [1,1,1], [0,1,1], [1,0,0], [0,1,0], [1,0,0], [1,0,1], [1,1,1], [1,1,1], [1,0,1], [0,2,0], [0,1,1]
         ];
-
         let query = [0,0,0,0,0,1,0,0,0,1,1];
 */
