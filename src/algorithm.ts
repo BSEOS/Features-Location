@@ -263,7 +263,7 @@ class LSA {
         return cpt;
     }
 
-    TFIDF(matrix: Map<String, [number, number][]>): Map<String, [number, number][]> {
+   /* TFIDF(matrix: Map<String, [number, number][]>): Map<String, [number, number][]> {
         for (let key of this.dictionary.keys()) {
             let list: [number, number][];
             list = (matrix.get(key)!);
@@ -279,7 +279,40 @@ class LSA {
             }
         }
         return matrix;
-    }
+    }*/
+
+        countColomnes(matrix: number[][], index: number) : number{
+            let res : number = 0;
+            for (var i = 0; i < matrix.length; i++) {
+                res = res + matrix[i][index];
+            }      
+            return res;
+        }
+
+        countNumberDocumentsAppearWord(matrix: number[][], index: number): number{
+            let res : number = 0;
+            for (var i = 0; i < this.documents.length; i++) {
+                if (matrix[index][i] > 0){
+                    res++;
+                }
+            }      
+            return res;
+        }
+
+       TFIDF(matrix: number[][]): number[][] {
+        for (var i = 0; i < matrix.length; i++) {
+            for (var j = 0; j < matrix[i].length; j++) {
+                let Nij: number = matrix[i][j];
+                let Nj: number = this.countColomnes(matrix, j);
+                let D: number = this.documents.length;
+                let Di: number = this.countNumberDocumentsAppearWord(matrix, i);
+                let calclog: number = (Math.log(D / Di));
+                let calcN: number = Nij / Nj;
+                matrix[i][j] = parseFloat((calcN * calclog).toPrecision(2));
+            }  
+        }
+           return matrix;
+       }
 
     printMatrix(matrix: number[][]) {
         let ligne: String = "";
@@ -505,6 +538,12 @@ class LSA {
         //console.log(this.dictionary);
         let matrix: number[][] = [];
         matrix = this.matrix(this.dictionary, this.documents);
+        console.log(this.documents_name)
+        console.log("before TFIDF : ")
+        console.log(matrix)
+        console.log("after TFIDF : ")
+        matrix = this.TFIDF(matrix);
+        console.log(matrix)
         const { u, v, q } = SVD(matrix);
         let matrixQ = this.vectorToOrthMatrix(q);
         matrixQ = this.sliceMatrixCarree(matrixQ, 0, 2);
@@ -514,7 +553,6 @@ class LSA {
         console.log(matrixV);
         // var mot_cles: String = readline.question("Veuillez saisir votre recherche : ");
         var mot_cles = request
-
         let query = this.generator_query_vector(mot_cles.toUpperCase());
         let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
         console.log(querry_coor);
@@ -523,8 +561,8 @@ class LSA {
         var name_docs = this.documents_name;
       //  console.log("names : " + name_docs);
         let pertinent_docs : [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
-      //  console.log("pertinent_docs");
-     //   console.log(pertinent_docs);
+        console.log("pertinent_docs");
+        console.log(pertinent_docs);
         let finalMap : Map<String, Range[]> = this.generateRangesRequest(request, pertinent_docs);
         console.log("======================================")
         console.log(finalMap)
