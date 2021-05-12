@@ -148,10 +148,10 @@ class LSA {
             for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
                 let line : String = this.documentLinesS.get(i)![j];
                 let tokensLine : String[] = line.split(" ")
-                let lastDepth = 0;
+               // let lastDepth = 0;
                 for (var k = 0; k < tokensLine.length; k++) {
-                    dictionnaire.push([tokensLine[k], new Range(new Position(j, lastDepth), new Position(j, tokensLine[k].length))]);
-                    lastDepth = tokensLine[k].length
+                    dictionnaire.push([tokensLine[k], new Range(new Position(j, 0), new Position(j, this.documentLinesS.get(i)!.length))]);
+                  //  lastDepth = tokensLine[k].length
                 }
             }
             this.documentLinesR.set(i, dictionnaire)
@@ -519,8 +519,8 @@ class LSA {
         let stringLine : String[] = this.documents[i].split("\n");
         let stringRange : [String, Range][] = [];
         for (var j = 0; j < stringLine.length; j++) {
-            let range : Range = new Range(new Position(j,0), 
-            new Position(j,stringLine[j].length));
+            let range : Range = new Range(new Position(j+1,0), 
+            new Position(j+1,stringLine.length));
             stringRange.push([stringLine[j], range]);
         }
         this.documentLinesS.set(i, stringLine);
