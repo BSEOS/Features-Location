@@ -12,7 +12,13 @@ import { DepNodeProvider, Dependency } from './nodeDependencies';
 
 
 export async function activate(context: vscode.ExtensionContext) {
-    let docs = ['/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/models/Account.cs', '/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/models/Bank.cs', '/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVari…ity/backend/src/Controllers/AccountController.cs', '/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/models/Consortium.cs', '/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/models/Converter.cs', '/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/Program.cs', '/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/Startup.cs']
+    let docs = ['/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/models/Account.cs',
+        '/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/models/Bank.cs',
+        '/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/Controllers/AccountController.cs',
+        '/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/models/Consortium.cs',
+        '/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/models/Converter.cs',
+        '/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/Program.cs',
+        '/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/Startup.cs']
     let curPath = "";
 
     if (vscode.workspace.workspaceFolders) {
@@ -28,17 +34,17 @@ export async function activate(context: vscode.ExtensionContext) {
     // console.log(lsa_obj.documents_name)
 
 
+    let map: Map<String, Range[]> = new Map<String, Range[]>();
+    let r = new Range(new Position(0, 2), new Position(0, 12));
+    docs.forEach(d => map.set(d, [r]));
 
-    new FeaturesLocator(context, docs);
+    new FeaturesLocator(context, map);
 
     vscode.window.registerTreeDataProvider(
         'nodeDependencies',
         new DepNodeProvider(curPath)
     );
 
-    let map: Map<String, Range[]> = new Map<String, Range[]>();
-    map.set("file", [new Range(new Position(2, 3), new Position(4, 6))]);
-    console.log(map.forEach((value, key) => { console.log(value) }))
 
     console.log('Congratulations, your extension "features-location" is now active!');
 
@@ -55,9 +61,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
     });
 
-    let disposable2 = vscode.commands.registerCommand('features-location.explore', async (fileUri) => {
-        vscode.window.showInformationMessage(fileUri);
-        console.log(fileUri);
+    let disposable2 = vscode.commands.registerCommand('features-location.explore', async () => {
+        vscode.window.showInformationMessage(curPath);
+        console.log(curPath);
     });
 
     // context.subscriptions.push(disposableFeatures);

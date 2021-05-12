@@ -157,10 +157,10 @@ interface Entry {
 export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscode.FileSystemProvider {
 
     private _onDidChangeFile: vscode.EventEmitter<vscode.FileChangeEvent[]>;
-    docs: String[] = [];
-    constructor(docs: String[]) {
+    docRanges: Map<String, Range[]> = new Map<String, Range[]>();
+    constructor(docRanges: Map<String, Range[]>) {
         this._onDidChangeFile = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
-        this.docs = docs;
+        this.docRanges = docRanges;
     }
 
     get onDidChangeFile(): vscode.Event<vscode.FileChangeEvent[]> {
@@ -273,8 +273,11 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         for (let c of children) {
             let name: string = c[0];
             let tp: vscode.FileType = c[1];
-            if (this.docs.find(d => d.includes(name))) {
-                res.push({ uri: vscode.Uri.file(path.join(fsPath, name)), type: tp, isRange: false, range: undefined })
+            for (let file of this.docRanges.keys()) {
+                if (file.includes(name)) {
+                    res.push({ uri: vscode.Uri.file(path.join(fsPath, name)), type: tp, isRange: false, range: undefined })
+                    break;
+                }
             }
         }
         return res;
@@ -282,8 +285,10 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 
     async getChildren(element?: Entry): Promise<Entry[]> {
         if (element?.type == vscode.FileType.File) {
-            let r: Range = new Range(new Position(1, 2), new Position(5, 6));
-            return [{ uri: element.uri, type: undefined, isRange: true, range: r }]
+            let r: Range[] | undefined = this.docRanges.get(element.uri.path);
+            let res: Entry[] = r ? r.map(rang => ({ uri: element.uri, type: undefined, isRange: true, range: rang })) : []
+            
+            return res;
         }
 
         if (element) {
@@ -291,7 +296,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
             return this.filterChildren(children, element.uri.fsPath);
         }
 
-        const workspaceFolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
+        const workspaceFolder = vscode.workspace.workspaceFolders?.filter(folder => folder.uri.scheme === 'file')[0];
         if (workspaceFolder) {
             const children = await this.readDirectory(workspaceFolder.uri);
             children.sort((a, b) => {
@@ -341,8 +346,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 }
 
 export class FeaturesLocator {
-    constructor(context: vscode.ExtensionContext, docs: String[]) {
-        const treeDataProvider = new FileSystemProvider(docs);
+    constructor(context: vscode.ExtensionContext, docRanges: Map<String, Range[]>) {
+        const treeDataProvider = new FileSystemProvider(docRanges);
         context.subscriptions.push(vscode.window.createTreeView('featuresView', { treeDataProvider }));
         let disp = vscode.commands.registerCommand('fileExplorer.openFile', (resource) => this.openResource(resource));
         context.subscriptions.push(disp);
