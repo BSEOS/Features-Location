@@ -538,10 +538,10 @@ class LSA {
         //console.log(this.dictionary);
         let matrix: number[][] = [];
         matrix = this.matrix(this.dictionary, this.documents);
-        console.log(this.documents_name)
-        console.log("before TFIDF : ")
-        console.log(matrix)
-        console.log("after TFIDF : ")
+      //  console.log(this.documents_name)
+     //   console.log("before TFIDF : ")
+     //   console.log(matrix)
+     //   console.log("after TFIDF : ")
         matrix = this.TFIDF(matrix);
         console.log(matrix)
         const { u, v, q } = SVD(matrix);
@@ -555,13 +555,14 @@ class LSA {
         var mot_cles = request
         let query = this.generator_query_vector(mot_cles.toUpperCase());
         let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
+       console.log("querry  : ************");
         console.log(querry_coor);
         let scores = this.score_documents_generator(querry_coor, matrixV)
-        console.log("scores : " + scores);
+       // console.log("scores : " + scores);
         var name_docs = this.documents_name;
       //  console.log("names : " + name_docs);
         let pertinent_docs : [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
-        console.log("pertinent_docs");
+        console.log("pertinent_docs=================");
         console.log(pertinent_docs);
         let finalMap : Map<String, Range[]> = this.generateRangesRequest(request, pertinent_docs);
         console.log("======================================")
@@ -582,11 +583,14 @@ class LSA {
 
     searchRangesInDocument(request : String, list : [String, Range][]) : Range[]{
         let list_range : Range[] = [];
-        for (var i = 0; i < list.length; i++){
-            if (request == list[i][0]){
-                list_range.push(list[i][1]);
-            }
-        }  
+        let tokens_request : String[] = request.split(' ');
+        for (var j = 0; j < tokens_request.length; j++){
+            for (var i = 0; i < list.length; i++){
+                if (tokens_request[j] == list[i][0]){
+                    list_range.push(list[i][1]);
+                }
+            } 
+        } 
         return list_range
     }
 
