@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 import * as rimraf from 'rimraf';
+import { Range, Position } from 'vscode';
 
 //#region Utilities
 
@@ -146,7 +147,9 @@ export class FileStat implements vscode.FileStat {
 
 interface Entry {
     uri: vscode.Uri;
-    type: vscode.FileType;
+    type: vscode.FileType | undefined;
+    isRange: boolean;
+    range: Range | undefined;
 }
 
 //#endregion
@@ -271,13 +274,18 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
             let name: string = c[0];
             let tp: vscode.FileType = c[1];
             if (this.docs.find(d => d.includes(name))) {
-                res.push({ uri: vscode.Uri.file(path.join(fsPath, name)), type: tp })
+                res.push({ uri: vscode.Uri.file(path.join(fsPath, name)), type: tp, isRange: false, range: undefined })
             }
         }
         return res;
     }
 
     async getChildren(element?: Entry): Promise<Entry[]> {
+        if (element?.type == vscode.FileType.File) {
+            let r: Range = new Range(new Position(1, 2), new Position(5, 6));
+            return [{ uri: element.uri, type: undefined, isRange: true, range: r }]
+        }
+
         if (element) {
             const children = await this.readDirectory(element.uri);
             return this.filterChildren(children, element.uri.fsPath);
@@ -299,16 +307,36 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         return [];
     }
 
+    rangeToString(range: Range | undefined): string {
+        if (!range)
+            return "[]"
+        let start = range.start;
+        let end = range.end;
+        return ("[" + start.line + ":" + start.character + " - " + end.line + ":" + end.character + "]");
+    }
+
     getTreeItem(element: Entry): vscode.TreeItem {
         // if (element.uri.path.includes("back")) {
         //     return new vscode.TreeItem("")
         // }
-        const treeItem = new vscode.TreeItem(element.uri, element.type === vscode.FileType.Directory ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
-        if (element.type === vscode.FileType.File) {
-            treeItem.command = { command: 'fileExplorer.openFile', title: "Open File", arguments: [element.uri], };
-            treeItem.contextValue = 'file';
+        if (element.isRange) {
+
+            let treeItem = new vscode.TreeItem(this.rangeToString(element.range));
+            treeItem.description = "Range";
+
+            return treeItem;
         }
-        return treeItem;
+        else {
+            const treeItem = new vscode.TreeItem(element.uri, element.type === vscode.FileType.Directory ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.Collapsed);
+            if (element.type === vscode.FileType.File) {
+                treeItem.command = { command: 'fileExplorer.openFile', title: "Open File", arguments: [element.uri], };
+                treeItem.contextValue = 'file';
+                treeItem.description = "File";
+            } else {
+                treeItem.description = "Folder";
+            }
+            return treeItem;
+        }
     }
 }
 
