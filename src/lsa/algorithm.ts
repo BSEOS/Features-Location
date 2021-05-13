@@ -529,9 +529,6 @@ class LSA {
         let final_list_request: String[] = [];
         for (var i = 0; i < list_request.length; i++) {
             list_request[i] = list_request[i].replace('\n', ' ');
-            list_request[i] = list_request[i].replace('\n', ' ');
-            list_request[i] = list_request[i].replace('\n', ' ');
-            list_request[i] = list_request[i].replace('\n', ' ');
             list_request[i] = list_request[i].replace('Feature Description', ' ');
             list_request[i] = list_request[i].replace('Feature Name', ' ');
             list_request[i] = list_request[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');

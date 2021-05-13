@@ -27,13 +27,22 @@
                     "command": "features-location.refreshEntry",
                     "when": "view == featuresView",
                     "group": "navigation"
+                },
+                {
+                    "command": "features-location.searchFeature",
+                    "when": "view == featuresView",
+                    "group": "navigation"
                 }
             ]
         },
         "commands": [
             {
                 "command": "features-location.searchFeature",
-                "title": "Search Feature"
+                "title": "Search Feature",
+                "icon": {
+                    "light": "media/search-ic2.svg",
+                    "dark": "media/search-ic2.svg"
+                }
             },
             {
                 "command": "features-location.helloWorld",
