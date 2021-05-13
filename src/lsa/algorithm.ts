@@ -52,12 +52,14 @@ class LSA {
     constructor() {
     }
 
+
     readRepository(dir: String) {
         let all_files = getAllFiles(dir, [])
         //   console.log("_______________________")
         //  console.log("all_files :" + all_files)
         //   console.log("_______________________")
-        all_files = all_files.filter(s => !s.includes("stopwords.json"))
+        all_files = all_files.filter(s => !s.includes("stopwords.json") && !s.includes("/bin") && !s.includes("/obj"))
+
 
         // all_files = all_files.filter(obj => (obj.includes("/src")))
         all_files.forEach(s => this.readDocument(s))

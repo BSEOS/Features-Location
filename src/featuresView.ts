@@ -187,15 +187,17 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         let res = await this.featureLocator.lsa(dir, stopWordsPath)
     }
 
-    refresh(): void {
+    async refresh(): Promise<void> {
         console.log("REFRESHED");
-        this.initLSA();
+        await this.initLSA();
         let testRefresh = path.join(__filename, '..', "..", 'samples', 'testRefresh.txt');
         this.docRanges.set(testRefresh, []);
         this._onDidChangeTreeData.fire();
     }
 
     async searchFeature(query: string): Promise<void> {
+        if (query.trim() === "")
+            return;
 
         this.docRanges = await this.featureLocator.search(query);
         console.log("SEARCH FEATURE");
@@ -397,17 +399,27 @@ export class FeaturesLocator {
         let disp2 = vscode.commands.registerCommand('fileExplorer.openFileRange', (resource, range) =>
             this.openFileRange(resource, range));
 
-        let dispRefresh = vscode.commands.registerCommand('features-location.refreshEntry', () =>
-            treeDataProvider.refresh()
+        let dispRefresh = vscode.commands.registerCommand('features-location.refreshEntry', async () =>
+            await treeDataProvider.refresh()
         );
 
-        let dispSearchFeature = vscode.commands.registerCommand('features-location.searchFeature', (query: string) =>
+        let dispSearchFeatureArg = vscode.commands.registerCommand('features-location.searchFeatureArg', (query: string) =>
             treeDataProvider.searchFeature(query)
         );
+        context.subscriptions.push(dispSearchFeatureArg);
+
+
+        let dispSearchFeature = vscode.commands.registerCommand('features-location.searchFeature', async () => {
+            let query = await vscode.window.showInputBox();
+            treeDataProvider.searchFeature(query ? query : "")
+        });
+
 
         context.subscriptions.push(disp1);
         context.subscriptions.push(disp2);
         context.subscriptions.push(dispRefresh);
+
+        context.subscriptions.push(dispSearchFeature);
 
 
     }
