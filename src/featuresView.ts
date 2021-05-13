@@ -173,23 +173,31 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         this.featureLocator = new LSA();
         if (docRanges)
             this.docRanges = docRanges;
+
+        this.initLSA();
     }
 
-    refresh(): void {
-        console.log("REFRESHED");
-        this.docRanges.set("/home/edwin/Desktop/Cours/S2/PSTL/features-location/samples/testRefresh.txt", []);
-        this._onDidChangeTreeData.fire();
-    }
-
-    async searchFeature(query: string): Promise<void> {
+    async initLSA() {
         let curPath = "";
         if (vscode.workspace.workspaceFolders) {
             curPath = vscode.workspace.workspaceFolders[0].uri.path;
         }
         let dir = curPath
-        let stopWordsPath = path.join(__filename,'..',"..", 'config', 'stopwords.json');
-        let res = await this.featureLocator.lsa(query, dir, stopWordsPath)
-        this.docRanges = res;
+        let stopWordsPath = path.join(__filename, '..', "..", 'config', 'stopwords.json');
+        let res = await this.featureLocator.lsa(dir, stopWordsPath)
+    }
+
+    refresh(): void {
+        console.log("REFRESHED");
+        this.initLSA();
+        let testRefresh = path.join(__filename, '..', "..", 'samples', 'testRefresh.txt');
+        this.docRanges.set(testRefresh, []);
+        this._onDidChangeTreeData.fire();
+    }
+
+    async searchFeature(query: string): Promise<void> {
+
+        this.docRanges = await this.featureLocator.search(query);
         console.log("SEARCH FEATURE");
         this._onDidChangeTreeData.fire();
     }

@@ -45,6 +45,10 @@ class LSA {
     documentLinesR = new Map<number, [String, Range][]>();
     documentLinesS = new Map<number, String[]>();
 
+    //U, V, Q
+    matrices: [number[][], number[][], number[][]] = [[], [], []];
+
+
     constructor() {
     }
 
@@ -540,11 +544,10 @@ class LSA {
         return requests;
     }
 
-    lsa(request: String, dir: String, stop_file: String): Map<String, Range[]> {
-        request = request.toUpperCase();
+
+    public lsa(dir: String, stop_file: String): void {
         this.readJson(stop_file);
         this.readRepository(dir)
-        let matrixFinal: number[][] = [];
         this.documentLinesGenerator();
         this.dictionary = this.dictionarygenerator(this.documents, this.stopwords);
         this.dictionary = this.removeWordsExpectIndexs(this.dictionary);
@@ -564,10 +567,21 @@ class LSA {
         let matrixV = v;
         let matrixU = u;
         matrixV = this.slice_matrix_verticaly(matrixV);
-        //  console.log(matrixV);
-        // var mot_cles: String = readline.question("Veuillez saisir votre recherche : ");
-        var mot_cles = request
-        let query = this.generator_query_vector(mot_cles.toUpperCase());
+        this.matrices[0] = matrixU;
+        this.matrices[1] = matrixV;
+        this.matrices[2] = matrixQ;
+    }
+
+    public search(request: string): Map<String, Range[]> {
+        request = request.toUpperCase();
+
+        let matrixFinal: number[][] = [];
+
+        let matrixU = this.matrices[0];
+        let matrixV = this.matrices[1];
+        let matrixQ = this.matrices[2];
+        request = request.toUpperCase();
+        let query = this.generator_query_vector(request.toUpperCase());
         let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
         console.log("querry  : ************");
         console.log(querry_coor);

@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
-import { Uri, Range, Position } from 'vscode';
 
-import { LSA } from './lsa/algorithm';
 import { FeaturesLocator } from './featuresView';
 
 
