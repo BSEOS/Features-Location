@@ -11,6 +11,11 @@ out/
 *.lsif
 *.db
 
+# Examples
+src/fileExplorer.ts
+src/nodeDependencies.ts
+nodeDependencies.ts
+
 # Logs
 logs
 *.log

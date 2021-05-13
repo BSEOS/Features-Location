@@ -21,9 +21,18 @@
                 "contents": "Search for a Feature.\n[Search](command:features-location.search)"
             }
         ],
+        "menus": {
+            "view/title": [
+                {
+                    "command": "features-location.refreshEntry",
+                    "when": "view == featuresView",
+                    "group": "navigation"
+                }
+            ]
+        },
         "commands": [
             {
-                "command": "features-location.search",
+                "command": "features-location.searchFeature",
                 "title": "Search Feature"
             },
             {
@@ -37,6 +46,14 @@
             {
                 "command": "fileExplorer.openFile",
                 "title": "Open File"
+            },
+            {
+                "command": "features-location.refreshEntry",
+                "title": "Refresh",
+                "icon": {
+                    "light": "media/light/refresh.svg",
+                    "dark": "media/dark/refresh.svg"
+                }
             }
         ],
         "views": {

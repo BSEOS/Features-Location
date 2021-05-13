@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 import * as rimraf from 'rimraf';
 import { Range, Position } from 'vscode';
+import { LSA } from './lsa/algorithm';
+
 
 //#region Utilities
 
@@ -155,13 +157,43 @@ interface Entry {
 //#endregion
 
 export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscode.FileSystemProvider {
-
+    private featureLocator: LSA;
     private _onDidChangeFile: vscode.EventEmitter<vscode.FileChangeEvent[]>;
+
+    private _onDidChangeTreeData: vscode.EventEmitter<Entry | undefined | null | void> = new vscode.EventEmitter<Entry | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<Entry | undefined | null | void> = this._onDidChangeTreeData.event;
+
+
     docRanges: Map<String, Range[]> = new Map<String, Range[]>();
-    constructor(docRanges: Map<String, Range[]>) {
+
+
+    constructor(docRanges?: Map<String, Range[]>) {
+
         this._onDidChangeFile = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
-        this.docRanges = docRanges;
+        this.featureLocator = new LSA();
+        if (docRanges)
+            this.docRanges = docRanges;
     }
+
+    refresh(): void {
+        console.log("REFRESHED");
+        this.docRanges.set("/home/edwin/Desktop/Cours/S2/PSTL/features-location/samples/testRefresh.txt", []);
+        this._onDidChangeTreeData.fire();
+    }
+
+    async searchFeature(query: string): Promise<void> {
+        let curPath = "";
+        if (vscode.workspace.workspaceFolders) {
+            curPath = vscode.workspace.workspaceFolders[0].uri.path;
+        }
+        let dir = curPath
+        let stopWordsPath = path.join(__filename,'..',"..", 'config', 'stopwords.json');
+        let res = await this.featureLocator.lsa(query, dir, stopWordsPath)
+        this.docRanges = res;
+        console.log("SEARCH FEATURE");
+        this._onDidChangeTreeData.fire();
+    }
+
 
     get onDidChangeFile(): vscode.Event<vscode.FileChangeEvent[]> {
         return this._onDidChangeFile.event;
@@ -348,14 +380,31 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 }
 
 export class FeaturesLocator {
-    constructor(context: vscode.ExtensionContext, docRanges: Map<String, Range[]>) {
+    constructor(context: vscode.ExtensionContext, docRanges?: Map<String, Range[]>) {
         const treeDataProvider = new FileSystemProvider(docRanges);
+
         context.subscriptions.push(vscode.window.createTreeView('featuresView', { treeDataProvider }));
-        let disp1 = vscode.commands.registerCommand('fileExplorer.openFile', (resource) => this.openResource(resource));
-        let disp2 = vscode.commands.registerCommand('fileExplorer.openFileRange', (resource, range) => this.openFileRange(resource,range));
+        let disp1 = vscode.commands.registerCommand('fileExplorer.openFile', (resource) =>
+            this.openResource(resource));
+        let disp2 = vscode.commands.registerCommand('fileExplorer.openFileRange', (resource, range) =>
+            this.openFileRange(resource, range));
+
+        let dispRefresh = vscode.commands.registerCommand('features-location.refreshEntry', () =>
+            treeDataProvider.refresh()
+        );
+
+        let dispSearchFeature = vscode.commands.registerCommand('features-location.searchFeature', (query: string) =>
+            treeDataProvider.searchFeature(query)
+        );
+
         context.subscriptions.push(disp1);
         context.subscriptions.push(disp2);
+        context.subscriptions.push(dispRefresh);
+
+
     }
+
+
 
     private openFileRange(resource: vscode.Uri, range: Range): void {
         const opts: vscode.TextDocumentShowOptions = {

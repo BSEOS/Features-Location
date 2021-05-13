@@ -517,11 +517,11 @@ class LSA {
         }
     }
 
-    listRequestsGenerator() : String[]{
-        let bankFeatures : String = fs.readFileSync("C:/Users/BUYMORE/Pictures/sorbonne/PSTL/bank-features.md", 'utf8');
-        let list_request : String[] = bankFeatures.split("##");
-        let final_list_request : String[] = [];
-        for(var i = 0; i < list_request.length; i++){
+    listRequestsGenerator(): String[] {
+        let bankFeatures: String = fs.readFileSync("C:/Users/BUYMORE/Pictures/sorbonne/PSTL/bank-features.md", 'utf8');
+        let list_request: String[] = bankFeatures.split("##");
+        let final_list_request: String[] = [];
+        for (var i = 0; i < list_request.length; i++) {
             list_request[i] = list_request[i].replace('\n', ' ');
             list_request[i] = list_request[i].replace('\n', ' ');
             list_request[i] = list_request[i].replace('\n', ' ');
@@ -529,13 +529,13 @@ class LSA {
             list_request[i] = list_request[i].replace('Feature Description', ' ');
             list_request[i] = list_request[i].replace('Feature Name', ' ');
             list_request[i] = list_request[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
-            if (list_request[i].length > 0){
+            if (list_request[i].length > 0) {
                 final_list_request.push(list_request[i]);
             }
         }
-        let requests : String[] = []; 
-        for(var i = 0, j = 1; j < final_list_request.length; i+=2, j+=2){
-            requests.push(final_list_request[i].concat(final_list_request[j].toString())); 
+        let requests: String[] = [];
+        for (var i = 0, j = 1; j < final_list_request.length; i += 2, j += 2) {
+            requests.push(final_list_request[i].concat(final_list_request[j].toString()));
         }
         return requests;
     }
