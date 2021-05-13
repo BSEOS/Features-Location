@@ -195,6 +195,11 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         this._onDidChangeTreeData.fire();
     }
 
+    async clearView(): Promise<void> {
+        this.docRanges = new Map<String, Range[]>();
+        this._onDidChangeTreeData.fire();
+    }
+
     async searchFeature(query: string): Promise<void> {
         if (query.trim() === "")
             return;
@@ -399,6 +404,7 @@ export class FeaturesLocator {
         let disp2 = vscode.commands.registerCommand('fileExplorer.openFileRange', (resource, range) =>
             this.openFileRange(resource, range));
 
+
         let dispRefresh = vscode.commands.registerCommand('features-location.refreshEntry', async () =>
             await treeDataProvider.refresh()
         );
@@ -406,19 +412,22 @@ export class FeaturesLocator {
         let dispSearchFeatureArg = vscode.commands.registerCommand('features-location.searchFeatureArg', (query: string) =>
             treeDataProvider.searchFeature(query)
         );
-        context.subscriptions.push(dispSearchFeatureArg);
 
 
         let dispSearchFeature = vscode.commands.registerCommand('features-location.searchFeature', async () => {
             let query = await vscode.window.showInputBox();
-            treeDataProvider.searchFeature(query ? query : "")
+            treeDataProvider.searchFeature(query ? query : "");
         });
+
+        let dispClear = vscode.commands.registerCommand('features-location.clearView', async () =>
+            await treeDataProvider.clearView()
+        );
 
 
         context.subscriptions.push(disp1);
         context.subscriptions.push(disp2);
         context.subscriptions.push(dispRefresh);
-
+        context.subscriptions.push(dispSearchFeatureArg);
         context.subscriptions.push(dispSearchFeature);
 
 

@@ -24,7 +24,7 @@
         "menus": {
             "view/title": [
                 {
-                    "command": "features-location.refreshEntry",
+                    "command": "features-location.clearView",
                     "when": "view == featuresView",
                     "group": "navigation"
                 },
@@ -32,7 +32,13 @@
                     "command": "features-location.searchFeature",
                     "when": "view == featuresView",
                     "group": "navigation"
+                },
+                {
+                    "command": "features-location.refreshEntry",
+                    "when": "view == featuresView",
+                    "group": "navigation"
                 }
+
             ]
         },
         "commands": [
@@ -40,8 +46,8 @@
                 "command": "features-location.searchFeature",
                 "title": "Search Feature",
                 "icon": {
-                    "light": "media/search-ic2.svg",
-                    "dark": "media/search-ic2.svg"
+                    "light": "media/light/search.svg",
+                    "dark": "media/dark/search.svg"
                 }
             },
             {
@@ -63,6 +69,9 @@
                     "light": "media/light/refresh.svg",
                     "dark": "media/dark/refresh.svg"
                 }
+            },            {
+                "command": "features-location.clearView",
+                "title": "Clear"
             }
         ],
         "views": {
@@ -74,11 +83,13 @@
                 },
                 {
                     "id": "fileExplorer",
-                    "name": "File explorer"
+                    "name": "File explorer",
+                    "visibility": "hidden"
                 },
                 {
                     "id": "nodeDependencies",
-                    "name": "Node Dependencies"
+                    "name": "Node Dependencies",
+                    "visibility": "hidden"
                 }
             ]
         }
