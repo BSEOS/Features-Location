@@ -8,7 +8,7 @@ const f = function () {
     let p = new Position(2, 3)
     let q = new Position(4, 5)
     let r = new Range(p, q)
-    console.log(r)
+   // console.log(r)
 
 }
 export { f }
@@ -327,7 +327,7 @@ class LSA {
             for (var j = 0; j < matrix[i].length; j++) {
                 ligne = ligne.concat(matrix[i][j].toString());
             }
-            console.log(ligne);
+           // console.log(ligne);
             ligne = "";
         }
     }
@@ -405,9 +405,18 @@ class LSA {
     generator_query_vector(mot_cles: String): number[] {
         let tokens_mots_cle: String[];
         tokens_mots_cle = mot_cles.split(" ");
+        console.log("############ tokens_mots_cle_clean")
+        let tokens_mots_cle_clean : String[] = [];
+        for (var i = 0; i<tokens_mots_cle.length; i++){
+            if (tokens_mots_cle[i].length > 0){
+                tokens_mots_cle_clean.push(tokens_mots_cle[i])
+            }
+        }
+        console.log(tokens_mots_cle_clean)
+        console.log("############ tokens_mots_cle_clean")
         let query: number[] = [];
         for (let key of this.dictionary.keys()) {
-            if (this.contient(tokens_mots_cle, key)) {
+            if (this.contient(tokens_mots_cle_clean, key)) {
                 query.push(1);
             } else {
                 query.push(0);
@@ -484,7 +493,7 @@ class LSA {
 
     multiply_vector_matrix(vector: number[], matrix: number[][]): number[] {
         let tmp: number[] = [];
-        console.log(vector)
+       // console.log(vector)
         for (var i = 0; i < matrix.length; i++) {
             let res: number = 0;
             for (var j = 0; j < vector.length; j++) {
@@ -536,7 +545,9 @@ class LSA {
     }
 
     // names of the requests
-    generateListNames(list_request : String[]) : String[]{
+    generateListNames(fileFeatures : String) : String[]{
+        let bankFeatures : String = fs.readFileSync(fileFeatures, 'utf8');
+        let list_request : String[] = bankFeatures.split("##");
         var j = 1
         const tmp = list_request;
         let name_l : String[] = []
@@ -551,9 +562,6 @@ class LSA {
     listRequestsGenerator(fileFeatures : String) : String[]{
         let bankFeatures : String = fs.readFileSync(fileFeatures, 'utf8');
         let list_request : String[] = bankFeatures.split("##");
-        console.log("================#***")
-        console.log(this.generateListNames(list_request));
-        console.log("================#")
         let final_list_request : String[] = [];
         for(var i = 0; i < list_request.length; i++){
             list_request[i] = list_request[i].replace('\n', ' ');
@@ -575,9 +583,11 @@ class LSA {
     }
 
     lsa(request: String, dir : String, stop_file : String) : Map<String, Range[]>{
-        console.log("###############***##############")
-        console.log(this.listRequestsGenerator("C:/Users/BUYMORE/Pictures/sorbonne/PSTL/bank-features.md"));
-        console.log("################***#############")
+       // console.log("###############***##############")
+       // console.log(this.listRequestsGenerator("C:/Users/BUYMORE/Pictures/sorbonne/PSTL/bank-features.md"));
+       let request_list : String[] = this.listRequestsGenerator("C:/Users/BUYMORE/Pictures/sorbonne/PSTL/bank-features.md");
+       let names_list : String[] = this.generateListNames("C:/Users/BUYMORE/Pictures/sorbonne/PSTL/bank-features.md");   
+       console.log("################***#############")
         this.readJson(stop_file);
         this.readRepository(dir)
         let matrixFinal: number[][] = [];
@@ -601,27 +611,42 @@ class LSA {
         let matrixV = v;
         let matrixU = u;
         matrixV = this.slice_matrix_verticaly(matrixV);
-      //  console.log(matrixV);
-        // var mot_cles: String = readline.question("Veuillez saisir votre recherche : ");
+
         var mot_cles = request
         let query = this.generator_query_vector(mot_cles.toUpperCase());
         let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
-      // console.log("querry  : ************");
-      //  console.log(querry_coor);
         let scores = this.score_documents_generator(querry_coor, matrixV)
-       // console.log("scores : " + scores);
         var name_docs = this.documents_name;
-      //  console.log("names : " + name_docs);
         let pertinent_docs : [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
         console.log("pertinent_docs=================");
         console.log(pertinent_docs);
-        let finalMap : Map<String, Range[]> = this.generateRangesRequest(request, pertinent_docs);
+        let finalMap : Map<String, Range[]> = this.generateRangesRequest(request.toUpperCase(), pertinent_docs);
         console.log("======================================")
         console.log(finalMap)
         console.log("======================================")
+        
+        console.log(this.executeListOfRequests(request_list, matrixQ, matrixU, matrixV));
+     
         matrixFinal = this.multiplyMatrixs(matrixQ, matrixV,);
         return finalMap
     }
+
+    executeListOfRequests(request_list : String[], matrixQ : number[][], matrixU : number[][], matrixV : number[][]) : Map<String, Range[]>[]{
+        let listMaps : Map<String, Range[]>[] = [];
+        for(var i = 0; i < request_list.length; i++){
+            var mot_cles = request_list[i];
+            let query = this.generator_query_vector(mot_cles.toUpperCase());
+            let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
+            let scores = this.score_documents_generator(querry_coor, matrixV)
+            var name_docs = this.documents_name;
+            let pertinent_docs : [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
+            let finalMap : Map<String, Range[]> = this.generateRangesRequest(request_list[i].toUpperCase(), pertinent_docs);
+            listMaps.push(finalMap);
+        }
+        return listMaps;
+    }
+
+
 
     getIdDocument(name : String) : number {
         for(var i = 0; i < this.documents_name.length; i++){
@@ -635,7 +660,16 @@ class LSA {
     searchRangesInDocument(request : String, list : [String, Range][]) : Range[]{
         let list_range : Range[] = [];
         let tokens_request : String[] = request.split(' ');
-        var unique = tokens_request.filter(function(elem, index, self) {
+        console.log("############ tokens_request")
+        let tokens_mots_cle_clean : String[] = [];
+        for (var i = 0; i<tokens_request.length; i++){
+            if (tokens_request[i].length > 0){
+                tokens_mots_cle_clean.push(tokens_request[i])
+            }
+        }
+        console.log(tokens_mots_cle_clean)
+        console.log("############ tokens_request")
+        var unique = tokens_mots_cle_clean.filter(function(elem, index, self) {
             return index === self.indexOf(elem);
         })
         for (var j = 0; j < unique.length; j++){
@@ -651,12 +685,6 @@ class LSA {
     generateRangesRequest(request : String, pertinent_docs : [number[], String[]]) : Map<String, Range[]> {
         let finalMap : Map<String, Range[]> = new Map<String, Range[]>();
         let list_names : String[] = pertinent_docs[1];
-        console.log("list_names : ")
-        console.log(list_names)
-        console.log("0 list names : ")
-        console.log(list_names[0])
-        console.log("0 documents_name : ")
-        console.log(this.documents_name[0])
         let id_doc : number;
         for (var i = 0; i < list_names.length; i++){
             let list_range : Range[] = [];
