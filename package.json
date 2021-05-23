@@ -38,13 +38,20 @@
                     "when": "view == featuresView",
                     "group": "navigation"
                 }
-
             ]
         },
         "commands": [
             {
                 "command": "features-location.searchFeature",
                 "title": "Search Feature",
+                "icon": {
+                    "light": "media/light/search.svg",
+                    "dark": "media/dark/search.svg"
+                }
+            },
+            {
+                "command": "features-location.searchFeatures",
+                "title": "Search Features by description file",
                 "icon": {
                     "light": "media/light/search.svg",
                     "dark": "media/dark/search.svg"
@@ -69,7 +76,8 @@
                     "light": "media/light/refresh.svg",
                     "dark": "media/dark/refresh.svg"
                 }
-            },            {
+            },
+            {
                 "command": "features-location.clearView",
                 "title": "Clear"
             }

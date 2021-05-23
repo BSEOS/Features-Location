@@ -191,8 +191,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         }
         let dir = curPath
         let stopWordsPath = path.join(__filename, '..', "..", 'config', 'stopwords.json');
-        let res = await this.featureLocator.lsa("/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/bank-features.md",dir, stopWordsPath)
-        this.featuresMap = this.featureLocator.coupleToList(res);
+        await this.featureLocator.lsa(dir, stopWordsPath);
+
     }
 
     async refresh(): Promise<void> {
@@ -206,6 +206,16 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
     async clearView(): Promise<void> {
         this.docRanges = new Map<String, Range[]>();
         this.featuresMap = [];
+        this._onDidChangeTreeData.fire();
+    }
+
+    async searchFeatures(requestFile : String): Promise<void> {
+        //"/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/bank-features.md"
+
+        let res = await this.featureLocator.searchFeatures(requestFile);
+        this.featuresMap = this.featureLocator.coupleToList(res);
+
+        console.log("SEARCH FEATURES");
         this._onDidChangeTreeData.fire();
     }
 
@@ -478,6 +488,11 @@ export class FeaturesLocator {
             treeDataProvider.searchFeature(query ? query : "");
         });
 
+        let dispSearchFeatures = vscode.commands.registerCommand('features-location.searchFeatures', async () => {
+            let query = await vscode.window.showInputBox();
+            treeDataProvider.searchFeatures(query ? query : "");
+        });
+
         let dispClear = vscode.commands.registerCommand('features-location.clearView', async () =>
             await treeDataProvider.clearView()
         );
@@ -488,6 +503,7 @@ export class FeaturesLocator {
         context.subscriptions.push(dispRefresh);
         context.subscriptions.push(dispSearchFeatureArg);
         context.subscriptions.push(dispSearchFeature);
+        context.subscriptions.push(dispSearchFeatures);
 
 
     }

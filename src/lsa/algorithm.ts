@@ -566,9 +566,8 @@ class LSA {
         return requests;
     }
 
-    lsa(script_requests: String, dir: String, stop_file: String): [String[], Map<String, Range[]>[]] {
-        let request_list: String[] = this.listRequestsGenerator(script_requests);
-        let names_list: String[] = this.generateListNames(script_requests);
+    lsa(dir: String, stop_file: String): void {
+
         this.readJson(stop_file);
         this.readRepository(dir)
         this.documentLinesGenerator();
@@ -587,8 +586,20 @@ class LSA {
         this.matrices[1] = matrixV;
         this.matrices[2] = matrixQ;
 
+
+    }
+
+    public searchFeatures(script_requests: String): [String[], Map<String, Range[]>[]] {
+        let request_list: String[] = this.listRequestsGenerator(script_requests);
+        let names_list: String[] = this.generateListNames(script_requests);
+        let matrixU = this.matrices[0];
+        let matrixV = this.matrices[1];
+        let matrixQ = this.matrices[2];
+
         return [names_list, this.executeListOfRequests(names_list, request_list, matrixQ, matrixU, matrixV)];
     }
+
+
 
     public search(request: string): Map<String, Range[]> {
         request = request.toUpperCase();
