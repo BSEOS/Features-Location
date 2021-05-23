@@ -8,7 +8,6 @@ const f = function () {
     let p = new Position(2, 3)
     let q = new Position(4, 5)
     let r = new Range(p, q)
-   // console.log(r)
 
 }
 export { f }
@@ -50,12 +49,7 @@ class LSA {
 
     readRepository(dir: String) {
         let all_files = getAllFiles(dir, [])
-     //   console.log("_______________________")
-       //  console.log("all_files :" + all_files)
-      //   console.log("_______________________")
         all_files = all_files.filter(s => !s.includes("stopwords.json"))
-
-     //   all_files = all_files.filter(obj => (obj.includes("/src")))
         all_files.forEach(s => this.readDocument(s))
     }
 
@@ -327,7 +321,6 @@ class LSA {
             for (var j = 0; j < matrix[i].length; j++) {
                 ligne = ligne.concat(matrix[i][j].toString());
             }
-           // console.log(ligne);
             ligne = "";
         }
     }
@@ -405,15 +398,12 @@ class LSA {
     generator_query_vector(mot_cles: String): number[] {
         let tokens_mots_cle: String[];
         tokens_mots_cle = mot_cles.split(" ");
-        console.log("############ tokens_mots_cle_clean")
         let tokens_mots_cle_clean : String[] = [];
         for (var i = 0; i<tokens_mots_cle.length; i++){
             if (tokens_mots_cle[i].length > 0){
                 tokens_mots_cle_clean.push(tokens_mots_cle[i])
             }
         }
-        console.log(tokens_mots_cle_clean)
-        console.log("############ tokens_mots_cle_clean")
         let query: number[] = [];
         for (let key of this.dictionary.keys()) {
             if (this.contient(tokens_mots_cle_clean, key)) {
@@ -493,7 +483,6 @@ class LSA {
 
     multiply_vector_matrix(vector: number[], matrix: number[][]): number[] {
         let tmp: number[] = [];
-       // console.log(vector)
         for (var i = 0; i < matrix.length; i++) {
             let res: number = 0;
             for (var j = 0; j < vector.length; j++) {
@@ -582,66 +571,49 @@ class LSA {
         return requests;
     }
 
-    lsa(request: String, dir : String, stop_file : String) : Map<String, Range[]>{
-       // console.log("###############***##############")
-       // console.log(this.listRequestsGenerator("C:/Users/BUYMORE/Pictures/sorbonne/PSTL/bank-features.md"));
-       let request_list : String[] = this.listRequestsGenerator("C:/Users/BUYMORE/Pictures/sorbonne/PSTL/bank-features.md");
-       let names_list : String[] = this.generateListNames("C:/Users/BUYMORE/Pictures/sorbonne/PSTL/bank-features.md");   
-       console.log("################***#############")
+    lsa(script_requests : String, request: String, dir : String, stop_file : String) : [String[], Map<String, Range[]>[]]{
+       let request_list : String[] = this.listRequestsGenerator(script_requests);
+       let names_list : String[] = this.generateListNames(script_requests);   
         this.readJson(stop_file);
         this.readRepository(dir)
-        let matrixFinal: number[][] = [];
         this.documentLinesGenerator();
         this.dictionary = this.dictionarygenerator(this.documents, this.stopwords);
         this.dictionary = this.removeWordsExpectIndexs(this.dictionary);
-        //console.log(this.dictionary);
         let matrix: number[][] = [];
-        //console.log("############# before TFIDF : ")
         matrix = this.matrix(this.dictionary, this.documents);
-      //  console.log(this.documents_name)
-        //console.log(matrix)
-       // console.log("############# after TFIDF : ")
         matrix = this.TFIDF(matrix);
-        //console.log(matrix)
-        //console.log("############# before SVD : ")
         const { u, v, q } = SVD(matrix);
-        //console.log("############# AFTER SVD : ")
         let matrixQ = this.vectorToOrthMatrix(q);
         matrixQ = this.sliceMatrixCarree(matrixQ, 0, 2);
         let matrixV = v;
         let matrixU = u;
         matrixV = this.slice_matrix_verticaly(matrixV);
-
-        var mot_cles = request
-        let query = this.generator_query_vector(mot_cles.toUpperCase());
-        let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
-        let scores = this.score_documents_generator(querry_coor, matrixV)
-        var name_docs = this.documents_name;
-        let pertinent_docs : [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
-        console.log("pertinent_docs=================");
-        console.log(pertinent_docs);
-        let finalMap : Map<String, Range[]> = this.generateRangesRequest(request.toUpperCase(), pertinent_docs);
-        console.log("======================================")
-        console.log(finalMap)
-        console.log("======================================")
         
-        console.log(this.executeListOfRequests(request_list, matrixQ, matrixU, matrixV));
-     
-        matrixFinal = this.multiplyMatrixs(matrixQ, matrixV,);
-        return finalMap
+        return [names_list,this.executeListOfRequests(names_list, request_list, matrixQ, matrixU, matrixV)];
     }
 
-    executeListOfRequests(request_list : String[], matrixQ : number[][], matrixU : number[][], matrixV : number[][]) : Map<String, Range[]>[]{
+    executeListOfRequests(names_list : String[], request_list : String[], matrixQ : number[][], matrixU : number[][], matrixV : number[][]) : Map<String, Range[]>[]{
         let listMaps : Map<String, Range[]>[] = [];
         for(var i = 0; i < request_list.length; i++){
-            var mot_cles = request_list[i];
+            var mot_cles = names_list[i];
             let query = this.generator_query_vector(mot_cles.toUpperCase());
             let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
             let scores = this.score_documents_generator(querry_coor, matrixV)
             var name_docs = this.documents_name;
             let pertinent_docs : [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
-            let finalMap : Map<String, Range[]> = this.generateRangesRequest(request_list[i].toUpperCase(), pertinent_docs);
-            listMaps.push(finalMap);
+            let finalMap : Map<String, Range[]> = this.generateRangesRequest(names_list[i].toUpperCase(), pertinent_docs);
+            if(finalMap.size == 0){
+                var mot_cles = request_list[i];
+                let query = this.generator_query_vector(mot_cles.toUpperCase());
+                let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
+                let scores = this.score_documents_generator(querry_coor, matrixV)
+                var name_docs = this.documents_name;
+                let pertinent_docs : [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
+                let finalMap : Map<String, Range[]> = this.generateRangesRequest(request_list[i].toUpperCase(), pertinent_docs); 
+                listMaps.push(finalMap);
+            } else {
+                listMaps.push(finalMap);
+            }
         }
         return listMaps;
     }
@@ -660,15 +632,12 @@ class LSA {
     searchRangesInDocument(request : String, list : [String, Range][]) : Range[]{
         let list_range : Range[] = [];
         let tokens_request : String[] = request.split(' ');
-        console.log("############ tokens_request")
         let tokens_mots_cle_clean : String[] = [];
         for (var i = 0; i<tokens_request.length; i++){
             if (tokens_request[i].length > 0){
                 tokens_mots_cle_clean.push(tokens_request[i])
             }
         }
-        console.log(tokens_mots_cle_clean)
-        console.log("############ tokens_request")
         var unique = tokens_mots_cle_clean.filter(function(elem, index, self) {
             return index === self.indexOf(elem);
         })
@@ -741,29 +710,4 @@ class LSA {
     }
 
 }
-
-
-
-
-
-// let matrixResult = docs.lsa();
-
-
 export { LSA }
-
-// console.log(docs.documents_name)
-
-//console.log(matrixResult);
-/* comments in lsa
-                console.log(this.index_of_key_in_map("RICH"));
-        console.log(this.generator_query_vector("RICH ESTATE"));
-        let matrix : number[][] = [
-            [1,1,0,0,1,0,0,1], [1,0,0,0,1,1,0,1], [1,0,1,0,1,0,1,0], [0,1,0,0,0,1,0,0],
-            [0,1,0,0,1,1,0,0], [0,1,1,0,1,1,0,0], [0,0,0,0,1,1,0,0], [0,0,0,0,1,0,1,0],
-            [0,0,0,0,1,0,1,1]
-        ];
-        let matrix : number[][]= [
-            [1,1,1], [0,1,1], [1,0,0], [0,1,0], [1,0,0], [1,0,1], [1,1,1], [1,1,1], [1,0,1], [0,2,0], [0,1,1]
-        ];
-        let query = [0,0,0,0,0,1,0,0,0,1,1];
-*/
