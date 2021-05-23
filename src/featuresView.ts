@@ -191,8 +191,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         }
         let dir = curPath
         let stopWordsPath = path.join(__filename, '..', "..", 'config', 'stopwords.json');
-        let res = await this.featureLocator.lsa("/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/bank-features.md", "", dir, stopWordsPath)
-        this.featuresMap = this.featureLocator.couplesToList(res);
+        let res = await this.featureLocator.lsa("/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/bank-features.md",dir, stopWordsPath)
+        this.featuresMap = this.featureLocator.coupleToList(res);
     }
 
     async refresh(): Promise<void> {
@@ -214,6 +214,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
             return;
 
         this.docRanges = await this.featureLocator.search(query);
+        this.featuresMap = [];
+        this.featuresMap.push([query, this.docRanges]);
         console.log("SEARCH FEATURE");
         this._onDidChangeTreeData.fire();
     }

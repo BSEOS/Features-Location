@@ -36,6 +36,9 @@ class LSA {
     documentLinesR = new Map<number, [String, Range][]>();
     documentLinesS = new Map<number, String[]>();
 
+    //U, V, Q
+    matrices: [number[][], number[][], number[][]] = [[], [], []];
+
     constructor() {
     }
 
@@ -563,7 +566,7 @@ class LSA {
         return requests;
     }
 
-    lsa(script_requests: String, request: String, dir: String, stop_file: String): [String[], Map<String, Range[]>[]] {
+    lsa(script_requests: String, dir: String, stop_file: String): [String[], Map<String, Range[]>[]] {
         let request_list: String[] = this.listRequestsGenerator(script_requests);
         let names_list: String[] = this.generateListNames(script_requests);
         this.readJson(stop_file);
@@ -580,11 +583,42 @@ class LSA {
         let matrixV = v;
         let matrixU = u;
         matrixV = this.slice_matrix_verticaly(matrixV);
+        this.matrices[0] = matrixU;
+        this.matrices[1] = matrixV;
+        this.matrices[2] = matrixQ;
 
         return [names_list, this.executeListOfRequests(names_list, request_list, matrixQ, matrixU, matrixV)];
     }
 
-    couplesToList(couple: [String[], Map<String, Range[]>[]]): [String, Map<String, Range[]>][] {
+    public search(request: string): Map<String, Range[]> {
+        request = request.toUpperCase();
+
+        let matrixFinal: number[][] = [];
+
+        let matrixU = this.matrices[0];
+        let matrixV = this.matrices[1];
+        let matrixQ = this.matrices[2];
+        request = request.toUpperCase();
+        let query = this.generator_query_vector(request.toUpperCase());
+        let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
+        console.log("querry  : ************");
+        console.log(querry_coor);
+        let scores = this.score_documents_generator(querry_coor, matrixV)
+        // console.log("scores : " + scores);
+        var name_docs = this.documents_name;
+        //  console.log("names : " + name_docs);
+        let pertinent_docs: [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
+        console.log("pertinent_docs=================");
+        console.log(pertinent_docs);
+        let finalMap: Map<String, Range[]> = this.generateRangesRequest(request, pertinent_docs);
+        console.log("======================================")
+        console.log(finalMap)
+        console.log("======================================")
+        matrixFinal = this.multiplyMatrixs(matrixQ, matrixV,);
+        return finalMap
+    }
+
+    coupleToList(couple: [String[], Map<String, Range[]>[]]): [String, Map<String, Range[]>][] {
         let res: [String, Map<String, Range[]>][] = [];
         for (var i = 0; i < couple[0].length; i++) {
             res.push([couple[0][i], couple[1][i]]);
