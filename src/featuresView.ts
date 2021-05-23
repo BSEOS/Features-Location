@@ -209,7 +209,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         this._onDidChangeTreeData.fire();
     }
 
-    async searchFeatures(requestFile : String): Promise<void> {
+    async searchFeatures(requestFile: String): Promise<void> {
         //"/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/bank-features.md"
 
         let res = await this.featureLocator.searchFeatures(requestFile);
@@ -489,8 +489,13 @@ export class FeaturesLocator {
         });
 
         let dispSearchFeatures = vscode.commands.registerCommand('features-location.searchFeatures', async () => {
-            let query = await vscode.window.showInputBox();
-            treeDataProvider.searchFeatures(query ? query : "");
+            let uris = await vscode.window.showOpenDialog();
+            let featuresFile = "";
+            if (uris) {
+                featuresFile = uris[0].path;
+            }
+
+            treeDataProvider.searchFeatures(featuresFile);
         });
 
         let dispClear = vscode.commands.registerCommand('features-location.clearView', async () =>
