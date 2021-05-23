@@ -4,14 +4,6 @@ import { SVD } from 'svd-js'
 import { Uri, Range, Position } from 'vscode';
 
 
-const f = function () {
-    let p = new Position(2, 3)
-    let q = new Position(4, 5)
-    let r = new Range(p, q)
-
-}
-export { f }
-
 const fs = require("fs");
 const path = require("path")
 const readline = require('readline-sync');
@@ -41,15 +33,15 @@ class LSA {
     documents_name: String[] = [];
     documents_name_invar: String[] = [];
     dictionary = new Map<String, number[]>();
-    documentLinesR = new Map <number, [String, Range][]>();
-    documentLinesS = new Map <number, String[]>();
+    documentLinesR = new Map<number, [String, Range][]>();
+    documentLinesS = new Map<number, String[]>();
 
     constructor() {
     }
 
     readRepository(dir: String) {
         let all_files = getAllFiles(dir, [])
-        all_files = all_files.filter(s => !s.includes("stopwords.json"))
+        all_files = all_files.filter(s => !s.includes("stopwords.json") && !s.includes("/bin") && !s.includes("/obj"))
         all_files.forEach(s => this.readDocument(s))
     }
 
@@ -70,14 +62,14 @@ class LSA {
     }
 
     removeSpecialChars(documents: String[]): String[] {
-        let tmpDocumentLinesS : Map<number, String[]> = new Map<number, String[]>();
+        let tmpDocumentLinesS: Map<number, String[]> = new Map<number, String[]>();
         for (var i = 0; i < documents.length; i++) {
-            let listLines : String[] = [];
+            let listLines: String[] = [];
             documents[i] = documents[i].replace('\n', ' ');
             documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
             for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
                 listLines.push(this.documentLinesS.get(i)![j])
-                listLines[j] =  listLines[j].replace('\n', '');
+                listLines[j] = listLines[j].replace('\n', '');
                 listLines[j] = listLines[j].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
             }
             tmpDocumentLinesS.set(i, listLines);
@@ -89,9 +81,9 @@ class LSA {
     removeStopWords(documents: String[][], stopwords: String[]): String[][] {
         let tmp: String;
         let tmp2: [String, Range];
-        let tmpDocumentLinesR : Map<number, [String, Range][]> = new Map<number, [String, Range][]>();
+        let tmpDocumentLinesR: Map<number, [String, Range][]> = new Map<number, [String, Range][]>();
         for (var i = 0; i < documents.length; i++) {
-            let listtokens : [String, Range][] = this.documentLinesR.get(i)!;
+            let listtokens: [String, Range][] = this.documentLinesR.get(i)!;
             for (var j = 0; j < stopwords.length; j++) {
                 for (var k = 0; k < documents[i].length; k++) {
                     if (documents[i][k] == stopwords[j]) {
@@ -102,7 +94,7 @@ class LSA {
                 }
                 for (var x = 0; x < listtokens.length; x++) {
                     if (listtokens[x][0] == stopwords[j]) {
-                        tmp2 = listtokens[listtokens.length-1];
+                        tmp2 = listtokens[listtokens.length - 1];
                         listtokens[x] = tmp2;
                         listtokens.pop();
                     }
@@ -121,14 +113,14 @@ class LSA {
         return listStrings;
     }
 
-    
+
     upperCaselinesS() {
-        let tmpDocumentLinesS : Map<number, String[]> = new Map<number, String[]>();
+        let tmpDocumentLinesS: Map<number, String[]> = new Map<number, String[]>();
         for (var i = 0; i < this.documents.length; i++) {
-            let listLines : String[] = [];
-            for(var j = 0; j < this.documentLinesS.get(i)!.length; j++){
+            let listLines: String[] = [];
+            for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
                 listLines.push(this.documentLinesS.get(i)![j])
-                listLines[j] =  listLines[j].toUpperCase();
+                listLines[j] = listLines[j].toUpperCase();
             }
             tmpDocumentLinesS.set(i, listLines);
         }
@@ -138,14 +130,14 @@ class LSA {
     tokensGenerator(documents: String[]): String[][] {
         let documentsTokens: String[][] = [];
         for (var i = 0; i < documents.length; i++) {
-            let dictionnaire : [String, Range][] = [];
+            let dictionnaire: [String, Range][] = [];
             for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
-                let line : String = this.documentLinesS.get(i)![j];
-                let tokensLine : String[] = line.split(" ")
-               // let lastDepth = 0;
+                let line: String = this.documentLinesS.get(i)![j];
+                let tokensLine: String[] = line.split(" ")
+                // let lastDepth = 0;
                 for (var k = 0; k < tokensLine.length; k++) {
-                    dictionnaire.push([tokensLine[k], new Range(new Position(j+1, 0), new Position(j+1, this.documentLinesS.get(i)!.length))]);
-                  //  lastDepth = tokensLine[k].length
+                    dictionnaire.push([tokensLine[k], new Range(new Position(j + 1, 0), new Position(j + 1, this.documentLinesS.get(i)!.length))]);
+                    //  lastDepth = tokensLine[k].length
                 }
             }
             this.documentLinesR.set(i, dictionnaire)
@@ -257,63 +249,63 @@ class LSA {
         return cpt;
     }
 
-   /* TFIDF(matrix: Map<String, [number, number][]>): Map<String, [number, number][]> {
-        for (let key of this.dictionary.keys()) {
-            let list: [number, number][];
-            list = (matrix.get(key)!);
-            for (var i = 0; i < list.length; i++) {
-                let Nij: number = list[i][1];
-                let Nj: number = this.numberWordsInDocument(matrix, list[i][0]);
-                let D: number = this.documents.length;
-                let Di: number = (matrix.get(key)!).length;
-                let calclog: number = (Math.log(D / Di));
-                let calcN: number = Nij / Nj;
-                list[i][1] = parseFloat((calcN * calclog).toPrecision(2));
-                matrix.set(key, list);
+    /* TFIDF(matrix: Map<String, [number, number][]>): Map<String, [number, number][]> {
+         for (let key of this.dictionary.keys()) {
+             let list: [number, number][];
+             list = (matrix.get(key)!);
+             for (var i = 0; i < list.length; i++) {
+                 let Nij: number = list[i][1];
+                 let Nj: number = this.numberWordsInDocument(matrix, list[i][0]);
+                 let D: number = this.documents.length;
+                 let Di: number = (matrix.get(key)!).length;
+                 let calclog: number = (Math.log(D / Di));
+                 let calcN: number = Nij / Nj;
+                 list[i][1] = parseFloat((calcN * calclog).toPrecision(2));
+                 matrix.set(key, list);
+             }
+         }
+         return matrix;
+     }*/
+
+    countColomnes(matrix: number[][], index: number): number {
+        let res: number = 0;
+        for (var i = 0; i < matrix.length; i++) {
+            res = res + matrix[i][index];
+        }
+        return res;
+    }
+
+    countNumberDocumentsAppearWord(matrix: number[][], index: number): number {
+        let res: number = 0;
+        for (var i = 0; i < this.documents.length; i++) {
+            if (matrix[index][i] > 0) {
+                res++;
             }
         }
-        return matrix;
-    }*/
+        return res;
+    }
 
-        countColomnes(matrix: number[][], index: number) : number{
-            let res : number = 0;
-            for (var i = 0; i < matrix.length; i++) {
-                res = res + matrix[i][index];
-            }      
-            return res;
-        }
-
-        countNumberDocumentsAppearWord(matrix: number[][], index: number): number{
-            let res : number = 0;
-            for (var i = 0; i < this.documents.length; i++) {
-                if (matrix[index][i] > 0){
-                    res++;
-                }
-            }      
-            return res;
-        }
-
-       TFIDF(matrix: number[][]): number[][] {
+    TFIDF(matrix: number[][]): number[][] {
         let keys = Array.from(this.dictionary.keys());
-        let Nj : number[] = []
+        let Nj: number[] = []
         for (var i = 0; i < matrix.length; i++) {
-            let Di = this.dictionary.get(keys[i])!.filter(function(elem, index, self) {
+            let Di = this.dictionary.get(keys[i])!.filter(function (elem, index, self) {
                 return index === self.indexOf(elem);
             }).length
             let D: number = this.documents.length;
             for (var j = 0; j < matrix[i].length; j++) {
-                if(i == 0){
-                    Nj[j]= this.countColomnes(matrix, j);
+                if (i == 0) {
+                    Nj[j] = this.countColomnes(matrix, j);
                 }
                 let Nij: number = matrix[i][j];
-              //  let Di: number = this.countNumberDocumentsAppearWord(matrix, i);
+                //  let Di: number = this.countNumberDocumentsAppearWord(matrix, i);
                 let calclog: number = (Math.log(D / Di));
                 let calcN: number = Nij / Nj[j];
                 matrix[i][j] = (calcN * calclog);
-            }  
+            }
         }
-           return matrix;
-       }
+        return matrix;
+    }
 
     printMatrix(matrix: number[][]) {
         let ligne: String = "";
@@ -398,9 +390,9 @@ class LSA {
     generator_query_vector(mot_cles: String): number[] {
         let tokens_mots_cle: String[];
         tokens_mots_cle = mot_cles.split(" ");
-        let tokens_mots_cle_clean : String[] = [];
-        for (var i = 0; i<tokens_mots_cle.length; i++){
-            if (tokens_mots_cle[i].length > 0){
+        let tokens_mots_cle_clean: String[] = [];
+        for (var i = 0; i < tokens_mots_cle.length; i++) {
+            if (tokens_mots_cle[i].length > 0) {
                 tokens_mots_cle_clean.push(tokens_mots_cle[i])
             }
         }
@@ -519,40 +511,40 @@ class LSA {
         return tmp;
     }
 
-    documentLinesGenerator(){
+    documentLinesGenerator() {
         for (var i = 0; i < this.documents.length; i++) {
-        let stringLine : String[] = this.documents[i].split("\n");
-        let stringRange : [String, Range][] = [];
-        for (var j = 0; j < stringLine.length; j++) {
-            let range : Range = new Range(new Position(j+1,0), 
-            new Position(j+1,stringLine.length));
-            stringRange.push([stringLine[j], range]);
-        }
-        this.documentLinesS.set(i, stringLine);
-        this.documentLinesR.set(i, stringRange);
+            let stringLine: String[] = this.documents[i].split("\n");
+            let stringRange: [String, Range][] = [];
+            for (var j = 0; j < stringLine.length; j++) {
+                let range: Range = new Range(new Position(j + 1, 0),
+                    new Position(j + 1, stringLine.length));
+                stringRange.push([stringLine[j], range]);
+            }
+            this.documentLinesS.set(i, stringLine);
+            this.documentLinesR.set(i, stringRange);
         }
     }
 
     // names of the requests
-    generateListNames(fileFeatures : String) : String[]{
-        let bankFeatures : String = fs.readFileSync(fileFeatures, 'utf8');
-        let list_request : String[] = bankFeatures.split("##");
+    generateListNames(fileFeatures: String): String[] {
+        let bankFeatures: String = fs.readFileSync(fileFeatures, 'utf8');
+        let list_request: String[] = bankFeatures.split("##");
         var j = 1
         const tmp = list_request;
-        let name_l : String[] = []
-        while(j < tmp.length){
-            const name  = tmp[j];
-            name_l.push((name.replace('Name:', '').replace('\n', '').replace('\n', '').replace('\n', '').replace('\n', '').split(" "))[2]) 
-           j += 2;
+        let name_l: String[] = []
+        while (j < tmp.length) {
+            const name = tmp[j];
+            name_l.push((name.replace('Name:', '').replace('\n', '').replace('\n', '').replace('\n', '').replace('\n', '').split(" "))[2])
+            j += 2;
         }
         return name_l;
     }
 
-    listRequestsGenerator(fileFeatures : String) : String[]{
-        let bankFeatures : String = fs.readFileSync(fileFeatures, 'utf8');
-        let list_request : String[] = bankFeatures.split("##");
-        let final_list_request : String[] = [];
-        for(var i = 0; i < list_request.length; i++){
+    listRequestsGenerator(fileFeatures: String): String[] {
+        let bankFeatures: String = fs.readFileSync(fileFeatures, 'utf8');
+        let list_request: String[] = bankFeatures.split("##");
+        let final_list_request: String[] = [];
+        for (var i = 0; i < list_request.length; i++) {
             list_request[i] = list_request[i].replace('\n', ' ');
             list_request[i] = list_request[i].replace('\n', ' ');
             list_request[i] = list_request[i].replace('\n', ' ');
@@ -560,20 +552,20 @@ class LSA {
             list_request[i] = list_request[i].replace('Feature Description', ' ');
             list_request[i] = list_request[i].replace('Feature Name', ' ');
             list_request[i] = list_request[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
-            if (list_request[i].length > 0){
+            if (list_request[i].length > 0) {
                 final_list_request.push(list_request[i]);
             }
         }
-        let requests : String[] = []; 
-        for(var i = 0, j = 1; j < final_list_request.length; i+=2, j+=2){
-            requests.push(final_list_request[i].concat(final_list_request[j].toString())); 
+        let requests: String[] = [];
+        for (var i = 0, j = 1; j < final_list_request.length; i += 2, j += 2) {
+            requests.push(final_list_request[i].concat(final_list_request[j].toString()));
         }
         return requests;
     }
 
-    lsa(script_requests : String, request: String, dir : String, stop_file : String) : [String[], Map<String, Range[]>[]]{
-       let request_list : String[] = this.listRequestsGenerator(script_requests);
-       let names_list : String[] = this.generateListNames(script_requests);   
+    lsa(script_requests: String, request: String, dir: String, stop_file: String): [String[], Map<String, Range[]>[]] {
+        let request_list: String[] = this.listRequestsGenerator(script_requests);
+        let names_list: String[] = this.generateListNames(script_requests);
         this.readJson(stop_file);
         this.readRepository(dir)
         this.documentLinesGenerator();
@@ -588,28 +580,37 @@ class LSA {
         let matrixV = v;
         let matrixU = u;
         matrixV = this.slice_matrix_verticaly(matrixV);
-        
-        return [names_list,this.executeListOfRequests(names_list, request_list, matrixQ, matrixU, matrixV)];
+
+        return [names_list, this.executeListOfRequests(names_list, request_list, matrixQ, matrixU, matrixV)];
     }
 
-    executeListOfRequests(names_list : String[], request_list : String[], matrixQ : number[][], matrixU : number[][], matrixV : number[][]) : Map<String, Range[]>[]{
-        let listMaps : Map<String, Range[]>[] = [];
-        for(var i = 0; i < request_list.length; i++){
+    couplesToList(couple: [String[], Map<String, Range[]>[]]): [String, Map<String, Range[]>][] {
+        let res: [String, Map<String, Range[]>][] = [];
+        for (var i = 0; i < couple[0].length; i++) {
+            res.push([couple[0][i], couple[1][i]]);
+        }
+
+        return res;
+    }
+
+    executeListOfRequests(names_list: String[], request_list: String[], matrixQ: number[][], matrixU: number[][], matrixV: number[][]): Map<String, Range[]>[] {
+        let listMaps: Map<String, Range[]>[] = [];
+        for (var i = 0; i < request_list.length; i++) {
             var mot_cles = names_list[i];
             let query = this.generator_query_vector(mot_cles.toUpperCase());
             let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
             let scores = this.score_documents_generator(querry_coor, matrixV)
             var name_docs = this.documents_name;
-            let pertinent_docs : [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
-            let finalMap : Map<String, Range[]> = this.generateRangesRequest(names_list[i].toUpperCase(), pertinent_docs);
-            if(finalMap.size == 0){
+            let pertinent_docs: [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
+            let finalMap: Map<String, Range[]> = this.generateRangesRequest(names_list[i].toUpperCase(), pertinent_docs);
+            if (finalMap.size == 0) {
                 var mot_cles = request_list[i];
                 let query = this.generator_query_vector(mot_cles.toUpperCase());
                 let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
                 let scores = this.score_documents_generator(querry_coor, matrixV)
                 var name_docs = this.documents_name;
-                let pertinent_docs : [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
-                let finalMap : Map<String, Range[]> = this.generateRangesRequest(request_list[i].toUpperCase(), pertinent_docs); 
+                let pertinent_docs: [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
+                let finalMap: Map<String, Range[]> = this.generateRangesRequest(request_list[i].toUpperCase(), pertinent_docs);
                 listMaps.push(finalMap);
             } else {
                 listMaps.push(finalMap);
@@ -620,46 +621,46 @@ class LSA {
 
 
 
-    getIdDocument(name : String) : number {
-        for(var i = 0; i < this.documents_name.length; i++){
-            if (this.documents_name_invar[i] == name){
+    getIdDocument(name: String): number {
+        for (var i = 0; i < this.documents_name.length; i++) {
+            if (this.documents_name_invar[i] == name) {
                 return i;
             }
         }
         return -1;
     }
 
-    searchRangesInDocument(request : String, list : [String, Range][]) : Range[]{
-        let list_range : Range[] = [];
-        let tokens_request : String[] = request.split(' ');
-        let tokens_mots_cle_clean : String[] = [];
-        for (var i = 0; i<tokens_request.length; i++){
-            if (tokens_request[i].length > 0){
+    searchRangesInDocument(request: String, list: [String, Range][]): Range[] {
+        let list_range: Range[] = [];
+        let tokens_request: String[] = request.split(' ');
+        let tokens_mots_cle_clean: String[] = [];
+        for (var i = 0; i < tokens_request.length; i++) {
+            if (tokens_request[i].length > 0) {
                 tokens_mots_cle_clean.push(tokens_request[i])
             }
         }
-        var unique = tokens_mots_cle_clean.filter(function(elem, index, self) {
+        var unique = tokens_mots_cle_clean.filter(function (elem, index, self) {
             return index === self.indexOf(elem);
         })
-        for (var j = 0; j < unique.length; j++){
-            for (var i = 0; i < list.length; i++){
-                if (unique[j] == list[i][0]){
+        for (var j = 0; j < unique.length; j++) {
+            for (var i = 0; i < list.length; i++) {
+                if (unique[j] == list[i][0]) {
                     list_range.push(list[i][1]);
                 }
-            } 
+            }
         }
         return list_range
     }
 
-    generateRangesRequest(request : String, pertinent_docs : [number[], String[]]) : Map<String, Range[]> {
-        let finalMap : Map<String, Range[]> = new Map<String, Range[]>();
-        let list_names : String[] = pertinent_docs[1];
-        let id_doc : number;
-        for (var i = 0; i < list_names.length; i++){
-            let list_range : Range[] = [];
+    generateRangesRequest(request: String, pertinent_docs: [number[], String[]]): Map<String, Range[]> {
+        let finalMap: Map<String, Range[]> = new Map<String, Range[]>();
+        let list_names: String[] = pertinent_docs[1];
+        let id_doc: number;
+        for (var i = 0; i < list_names.length; i++) {
+            let list_range: Range[] = [];
             id_doc = this.getIdDocument(list_names[i]);
             list_range = this.searchRangesInDocument(request, this.documentLinesR.get(id_doc)!);
-            if (list_range.length>0){
+            if (list_range.length > 0) {
                 finalMap.set(this.documents_name_invar[id_doc], list_range);
             }
         }
@@ -694,8 +695,8 @@ class LSA {
         return (i + 1)
     }
 
-    display_most_pertinent_documents(scores: number[], name_docs: String[], low: number, high: number) : [number[], String[]] {
-        let tmp : [number[], String[]] = [[],[]];
+    display_most_pertinent_documents(scores: number[], name_docs: String[], low: number, high: number): [number[], String[]] {
+        let tmp: [number[], String[]] = [[], []];
         tmp.pop();
         tmp.pop();
         if (low < high) {

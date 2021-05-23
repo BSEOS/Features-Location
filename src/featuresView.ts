@@ -167,8 +167,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
     readonly onDidChangeTreeData: vscode.Event<Entry | undefined | null | void> = this._onDidChangeTreeData.event;
 
 
-    docRanges: Map<String, Range[]> = new Map<String, Range[]>();
-    featuresMap: [String, Map<String, Range[]>][] = [];
+    private docRanges: Map<String, Range[]> = new Map<String, Range[]>();
+    private featuresMap: [String, Map<String, Range[]>][] = [];
 
 
     constructor(docRanges?: Map<String, Range[]>, featuresMap?: [String, Map<String, Range[]>][]) {
@@ -181,7 +181,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         if (featuresMap)
             this.featuresMap = featuresMap;
 
-        // this.initLSA();
+        this.initLSA();
     }
 
     async initLSA() {
@@ -191,7 +191,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         }
         let dir = curPath
         let stopWordsPath = path.join(__filename, '..', "..", 'config', 'stopwords.json');
-        let res = await this.featureLocator.lsa("", "", dir, stopWordsPath)
+        let res = await this.featureLocator.lsa("/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/bank-features.md", "", dir, stopWordsPath)
+        this.featuresMap = this.featureLocator.couplesToList(res);
     }
 
     async refresh(): Promise<void> {
@@ -204,6 +205,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 
     async clearView(): Promise<void> {
         this.docRanges = new Map<String, Range[]>();
+        this.featuresMap = [];
         this._onDidChangeTreeData.fire();
     }
 
@@ -320,7 +322,6 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         return _.rename(oldUri.fsPath, newUri.fsPath);
     }
 
-    // tree data provider
 
     filterChildren(children: [string, vscode.FileType][], fsPath: string): Entry[] {
         let res: Entry[] = [];
