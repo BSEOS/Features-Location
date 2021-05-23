@@ -36,6 +36,8 @@ class LSA {
     documentLinesR = new Map<number, [String, Range][]>();
     documentLinesS = new Map<number, String[]>();
 
+    request_file: String = ""
+
     //U, V, Q
     matrices: [number[][], number[][], number[][]] = [[], [], []];
 
@@ -44,7 +46,7 @@ class LSA {
 
     readRepository(dir: String) {
         let all_files = getAllFiles(dir, [])
-        all_files = all_files.filter(s => !s.includes("stopwords.json") && !s.includes("/bin") && !s.includes("/obj"))
+        all_files = all_files.filter(s => !s.includes("stopwords.json") && !s.includes("/bin") && !s.includes("/obj") && !s.includes("/build") && !s.includes("/deploy")&& !s.includes("/img"))
         all_files.forEach(s => this.readDocument(s))
     }
 
@@ -590,6 +592,7 @@ class LSA {
     }
 
     public searchFeatures(script_requests: String): [String[], Map<String, Range[]>[]] {
+        this.request_file = script_requests;
         let request_list: String[] = this.listRequestsGenerator(script_requests);
         let names_list: String[] = this.generateListNames(script_requests);
         let matrixU = this.matrices[0];
@@ -649,7 +652,9 @@ class LSA {
             let pertinent_docs: [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
             let finalMap: Map<String, Range[]> = this.generateRangesRequest(names_list[i].toUpperCase(), pertinent_docs);
             if (finalMap.size == 0) {
+
                 var mot_cles = request_list[i];
+                console.log("REQUETE" + mot_cles);
                 let query = this.generator_query_vector(mot_cles.toUpperCase());
                 let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
                 let scores = this.score_documents_generator(querry_coor, matrixV)
@@ -702,11 +707,13 @@ class LSA {
         let list_names: String[] = pertinent_docs[1];
         let id_doc: number;
         for (var i = 0; i < list_names.length; i++) {
-            let list_range: Range[] = [];
-            id_doc = this.getIdDocument(list_names[i]);
-            list_range = this.searchRangesInDocument(request, this.documentLinesR.get(id_doc)!);
-            if (list_range.length > 0) {
-                finalMap.set(this.documents_name_invar[id_doc], list_range);
+            if (list_names[i] != this.request_file) {
+                let list_range: Range[] = [];
+                id_doc = this.getIdDocument(list_names[i]);
+                list_range = this.searchRangesInDocument(request, this.documentLinesR.get(id_doc)!);
+                if (list_range.length > 0) {
+                    finalMap.set(this.documents_name_invar[id_doc], list_range);
+                }
             }
         }
 

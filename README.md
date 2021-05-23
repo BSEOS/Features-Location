@@ -1,3 +1,3 @@
 # vscode-feature-locator
 
-![ed](demo/demo1.gif)
+![ed](demo/demo2.gif)

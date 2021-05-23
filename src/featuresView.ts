@@ -210,11 +210,10 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
     }
 
     async searchFeatures(requestFile: String): Promise<void> {
-        //"/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/bank-features.md"
 
         let res = await this.featureLocator.searchFeatures(requestFile);
         this.featuresMap = this.featureLocator.coupleToList(res);
-
+        
         console.log("SEARCH FEATURES");
         this._onDidChangeTreeData.fire();
     }
@@ -506,10 +505,10 @@ export class FeaturesLocator {
         context.subscriptions.push(disp1);
         context.subscriptions.push(disp2);
         context.subscriptions.push(dispRefresh);
+        context.subscriptions.push(dispClear);
         context.subscriptions.push(dispSearchFeatureArg);
         context.subscriptions.push(dispSearchFeature);
         context.subscriptions.push(dispSearchFeatures);
-
 
     }
 
