@@ -18,7 +18,7 @@
         "viewsWelcome": [
             {
                 "view": "featuresView",
-                "contents": "Search for a Feature.\n[Search](command:features-location.searchFeature)"
+                "contents": "Search for Features from description file.\n[Search](command:features-location.searchFeatures)"
             }
         ],
         "menus": {
