@@ -169,10 +169,20 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 
     private docRanges: Map<String, Range[]> = new Map<String, Range[]>();
     private featuresMap: [String, Map<String, Range[]>][] = [];
-
+    private featuresScoreMap: [String, Map<String, [number, [Range, number][]]>][] = [];
 
     constructor(docRanges?: Map<String, Range[]>, featuresMap?: [String, Map<String, Range[]>][]) {
+        let l: [String, Map<String, [number, [Range, number][]]>][] = [];
 
+        // l.push(["feature1", new Map<String, [number, [Range, number][]]>()]);
+        // l.push(["Limit", new Map<String, [number, [Range, number][]]>()]);
+        // let r1: Range = new Range(new Position(1, 2), new Position(1, 2));
+        // let r2: Range = new Range(new Position(3, 4), new Position(5, 6));
+        // l[0][1].set("/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/Program.cs", [2.3, [[r1, 1], [r2, 2]]]);
+        // l[1][1].set("/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/frontend/app/index.html", [4.5, [[r1, 5], [new Range(new Position(138, 0), new Position(138, 205)), 3.1415]]]);
+        // l[1][1].set("/home/edwin/Desktop/Cours/S2/PSTL/BankWebWithVariability/backend/src/models/Account.cs", [6.5, [[r1, 5], [new Range(new Position(66, 0), new Position(66, 70)), 2.435], [r1, 5]]]);
+        // this.featuresScoreMap = l;
+        //////////////////////////////
         this._onDidChangeFile = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
         this.featureLocator = new LSA();
         if (docRanges)
@@ -213,7 +223,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 
         let res = await this.featureLocator.searchFeatures(requestFile);
         this.featuresMap = this.featureLocator.coupleToList(res);
-        
+
         console.log("SEARCH FEATURES");
         this._onDidChangeTreeData.fire();
     }
@@ -427,11 +437,59 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         return ("[" + start.line + ":" + start.character + " - " + end.line + ":" + end.character + "]");
     }
 
+    getDocumentScore(element: Entry): number | undefined {
+        if (element.type != vscode.FileType.File)
+            return;
+
+        let res = undefined;
+
+        for (let fm of this.featuresScoreMap) {
+            if (fm[0] == element.feature) {
+                let map = fm[1];
+                map.forEach((v, docName) => {
+                    if (docName == element.uri.path) {
+                        res = v[0];
+                        return;
+                    }
+                });
+
+                return res;
+            }
+        }
+    }
+
+    getRangeScore(element: Entry): number | undefined {
+        if (!element.isRange)
+            return;
+
+        let res = undefined;
+
+        for (let fm of this.featuresScoreMap) {
+            if (fm[0] == element.feature) {
+                let map = fm[1];
+                map.forEach((v, docName) => {
+                    if (docName == element.uri.path) {
+                        v[1].forEach(r => {
+                            if (element.range) {
+                                if (r[0].isEqual(element.range)) {
+                                    res = r[1];
+                                    return;
+                                }
+                            }
+                        })
+                        return;
+                    }
+                });
+
+                return res;
+            }
+        }
+    }
+
     getTreeItem(element: Entry): vscode.TreeItem {
         if (element.isFeature) {
             const treeItem = new vscode.TreeItem(element.feature ? element.feature.toString() : "", vscode.TreeItemCollapsibleState.Collapsed);
             treeItem.description = "Feature";
-
             treeItem.iconPath = new vscode.ThemeIcon("telescope");
 
             return treeItem;
@@ -439,8 +497,12 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
         else if (element.isRange) {
 
             let treeItem = new vscode.TreeItem(this.rangeToString(element.range));
-            treeItem.description = "Range";
+
             treeItem.command = { command: 'fileExplorer.openFileRange', title: "Open File Range", arguments: [element.uri, element.range] };
+
+            let score = this.getRangeScore(element);
+            if (score)
+                treeItem.description = "score: " + score;
 
             treeItem.iconPath = new vscode.ThemeIcon("location");
             return treeItem;
@@ -451,7 +513,10 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
                 treeItem.contextValue = 'file';
                 treeItem.command = { command: 'fileExplorer.openFile', title: "Open File", arguments: [element.uri] };
 
-                // treeItem.description = "File";
+                let score = this.getDocumentScore(element);
+                if (score)
+                    treeItem.description = "score: " + score;
+
                 treeItem.iconPath = new vscode.ThemeIcon("file-code");
             } else {
                 // treeItem.description = "Folder";
