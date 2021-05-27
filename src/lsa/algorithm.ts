@@ -271,24 +271,6 @@ class LSA {
         return cpt;
     }
 
-    /* TFIDF(matrix: Map<String, [number, number][]>): Map<String, [number, number][]> {
-         for (let key of this.dictionary.keys()) {
-             let list: [number, number][];
-             list = (matrix.get(key)!);
-             for (var i = 0; i < list.length; i++) {
-                 let Nij: number = list[i][1];
-                 let Nj: number = this.numberWordsInDocument(matrix, list[i][0]);
-                 let D: number = this.documents.length;
-                 let Di: number = (matrix.get(key)!).length;
-                 let calclog: number = (Math.log(D / Di));
-                 let calcN: number = Nij / Nj;
-                 list[i][1] = parseFloat((calcN * calclog).toPrecision(2));
-                 matrix.set(key, list);
-             }
-         }
-         return matrix;
-     }*/
-
     countColomnes(matrix: number[][], index: number): number {
         let res: number = 0;
         for (var i = 0; i < matrix.length; i++) {
