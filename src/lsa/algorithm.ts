@@ -291,25 +291,34 @@ class LSA {
 
     TFIDF(matrix: number[][]): number[][] {
         let keys = Array.from(this.dictionary.keys());
-        let Nj: number[] = []
+        let Nj : number[] = []
         for (var i = 0; i < matrix.length; i++) {
-            let Di = this.dictionary.get(keys[i])!.filter(function (elem, index, self) {
+            let Di = this.dictionary.get(keys[i])!.filter(function(elem, index, self) {
                 return index === self.indexOf(elem);
             }).length
             let D: number = this.documents.length;
             for (var j = 0; j < matrix[i].length; j++) {
-                if (i == 0) {
-                    Nj[j] = this.countColomnes(matrix, j);
+                if(i == 0){
+                    Nj[j]= this.countColomnes(matrix, j);
                 }
                 let Nij: number = matrix[i][j];
-                //  let Di: number = this.countNumberDocumentsAppearWord(matrix, i);
-                let calclog: number = (Math.log(D / Di));
-                let calcN: number = Nij / Nj[j];
+                let calclog: number;
+                if (Di == 0){
+                    calclog = 0;
+                } else {
+                    calclog = parseFloat((Math.log(D / Di)).toFixed(3))
+                }
+                let calcN: number;
+                if (Nj[j] == 0){
+                    calcN = 0;
+                 } else {
+                    calcN = parseFloat((Nij / Nj[j]).toFixed(3));
+                }
                 matrix[i][j] = (calcN * calclog);
-            }
+            }  
         }
-        return matrix;
-    }
+           return matrix;
+       }
 
     printMatrix(matrix: number[][]) {
         let ligne: String = "";
