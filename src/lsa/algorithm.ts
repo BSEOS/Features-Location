@@ -181,12 +181,12 @@ class LSA {
 
     dictionarygenerator(documents: String[], stopwords: String[], isRequests : boolean): Map<String, number[]> {
         let dictionary = new Map<String, number[]>();
-        documents = this.removeSpecialChars(documents,isRequests);
+        documents = this.removeSpecialChars(documents, isRequests);
         documents = this.listStringsupperCase(documents);
-        this.upperCaselinesS();
+        if (!isRequests) this.upperCaselinesS();
         stopwords = this.listStringsupperCase(stopwords);
         let documentsTokens: String[][];
-        documentsTokens = this.tokensGenerator(documents);
+        documentsTokens = this.tokensGenerator(documents, isRequests);
         documentsTokens = this.removeStopWords(documentsTokens, stopwords, isRequests);
         for (var i = 0; i < documentsTokens.length; i++) {
             for (var j = 0; j < documentsTokens[i].length; j++) {
