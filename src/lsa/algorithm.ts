@@ -147,20 +147,22 @@ class LSA {
         this.documentLinesS = tmpDocumentLinesS;
     }
 
-    tokensGenerator(documents: String[]): String[][] {
+    tokensGenerator(documents: String[], isRequest : boolean): String[][] {
         let documentsTokens: String[][] = [];
+        if (!isRequest){
         for (var i = 0; i < documents.length; i++) {
-            let dictionnaire: [String, Range][] = [];
+            let dictionnaire : [String, Range][] = [];
             for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
-                let line: String = this.documentLinesS.get(i)![j];
-                let tokensLine: String[] = line.split(" ")
-                // let lastDepth = 0;
+                let line : String = this.documentLinesS.get(i)![j];
+                let tokensLine : String[] = line.split(" ")
+               // let lastDepth = 0;
                 for (var k = 0; k < tokensLine.length; k++) {
-                    dictionnaire.push([tokensLine[k], new Range(new Position(j + 1, 0), new Position(j + 1, this.documentLinesS.get(i)!.length))]);
-                    //  lastDepth = tokensLine[k].length
+                    dictionnaire.push([tokensLine[k], new Range(new Position(j+1, 0), new Position(j+1, this.documentLinesS.get(i)!.length))]);
+                  //  lastDepth = tokensLine[k].length
                 }
             }
             this.documentLinesR.set(i, dictionnaire)
+        }
         }
         for (var i = 0; i < documents.length; i++) {
             documentsTokens.push(documents[i].split(" "));
