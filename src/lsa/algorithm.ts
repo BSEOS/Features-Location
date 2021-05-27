@@ -98,12 +98,12 @@ class LSA {
         }
     }
 
-    removeStopWords(documents: String[][], stopwords: String[]): String[][] {
+    removeStopWords(documents: String[][], stopwords: String[], isRequests : boolean): String[][] {
         let tmp: String;
         let tmp2: [String, Range];
-        let tmpDocumentLinesR: Map<number, [String, Range][]> = new Map<number, [String, Range][]>();
+        let tmpDocumentLinesR : Map<number, [String, Range][]> = new Map<number, [String, Range][]>();
         for (var i = 0; i < documents.length; i++) {
-            let listtokens: [String, Range][] = this.documentLinesR.get(i)!;
+            let listtokens : [String, Range][] = this.documentLinesR.get(i)!;
             for (var j = 0; j < stopwords.length; j++) {
                 for (var k = 0; k < documents[i].length; k++) {
                     if (documents[i][k] == stopwords[j]) {
@@ -114,7 +114,7 @@ class LSA {
                 }
                 for (var x = 0; x < listtokens.length; x++) {
                     if (listtokens[x][0] == stopwords[j]) {
-                        tmp2 = listtokens[listtokens.length - 1];
+                        tmp2 = listtokens[listtokens.length-1];
                         listtokens[x] = tmp2;
                         listtokens.pop();
                     }
@@ -122,7 +122,7 @@ class LSA {
             }
             tmpDocumentLinesR.set(i, listtokens);
         }
-        this.documentLinesR = tmpDocumentLinesR;
+        if (!isRequests) this.documentLinesR = tmpDocumentLinesR;
         return documents;
     }
 
@@ -177,15 +177,15 @@ class LSA {
         return dictionary;
     }
 
-    dictionarygenerator(documents: String[], stopwords: String[]): Map<String, number[]> {
+    dictionarygenerator(documents: String[], stopwords: String[], isRequests : boolean): Map<String, number[]> {
         let dictionary = new Map<String, number[]>();
-        documents = this.removeSpecialChars(documents);
+        documents = this.removeSpecialChars(documents,isRequests);
         documents = this.listStringsupperCase(documents);
         this.upperCaselinesS();
         stopwords = this.listStringsupperCase(stopwords);
         let documentsTokens: String[][];
         documentsTokens = this.tokensGenerator(documents);
-        documentsTokens = this.removeStopWords(documentsTokens, stopwords);
+        documentsTokens = this.removeStopWords(documentsTokens, stopwords, isRequests);
         for (var i = 0; i < documentsTokens.length; i++) {
             for (var j = 0; j < documentsTokens[i].length; j++) {
                 if (dictionary.has(documentsTokens[i][j])) {
