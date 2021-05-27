@@ -612,7 +612,7 @@ class LSA {
 
 
 
-   /* public search(request: string): Map<String, Range[]> {
+    public search(request: string): Map<String, [number, [Range, number][]]> {
         request = request.toUpperCase();
 
         let matrixFinal: number[][] = [];
@@ -632,13 +632,13 @@ class LSA {
         let pertinent_docs: [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
         console.log("pertinent_docs=================");
         console.log(pertinent_docs);
-        let finalMap: Map<String, [number, [Range, number][]]> = this.generateRangesRequest(request, pertinent_docs);
+        let finalMap: Map<String, [number, [Range, number][]]> = this.generateRangesRequest(request, pertinent_docs, 0);
         console.log("======================================")
         console.log(finalMap)
         console.log("======================================")
         matrixFinal = this.multiplyMatrixs(matrixQ, matrixV,);
         return finalMap
-    }*/
+    }
 
     coupleToList(couple: [String[], Map<String, Range[]>[]]): [String, Map<String, Range[]>][] {
         let res: [String, Map<String, Range[]>][] = [];
@@ -697,8 +697,6 @@ class LSA {
         }
         return listMaps;
     }
-
-
 
     getIdDocument(name: String): number {
         for (var i = 0; i < this.documents_name.length; i++) {
