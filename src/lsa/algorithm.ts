@@ -511,9 +511,13 @@ class LSA {
     }
 
     cosinus_similarity(q: number[], d: number[]): number {
-        let dot_product = ((q[0] * d[0]) + (q[1] * d[1]));
-        let product_modulus = (Math.sqrt((q[0] * q[0]) + (q[1] * q[1])) * Math.sqrt((d[0] * d[0]) + (d[1] * d[1])))
-        return dot_product / product_modulus;
+        if (q.length > 0){
+            let dot_product = (q[0] * d[0]) + (q[1] * d[1])
+             let product_modulus = (Math.sqrt((q[0] * q[0]) + (q[1] * q[1])) * Math.sqrt((d[0] * d[0]) + (d[1] * d[1])))
+             return ((dot_product) /(product_modulus));
+        } else {
+            return 0;
+        }
     }
 
     score_documents_generator(q: number[], matrixV: number[][]): number[] {
