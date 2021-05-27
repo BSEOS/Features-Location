@@ -47,7 +47,7 @@ class LSA {
 
     readRepository(dir: String) {
         let all_files = getAllFiles(dir, [])
-        all_files = all_files.filter(s => !s.includes("stopwords.json") && !s.includes("/bin") && !s.includes("/obj") && !s.includes("/build") && !s.includes("/deploy")&& !s.includes("/img"))
+        all_files = all_files.filter(s => !s.includes("stopwords.json") && !s.includes("/bin") && !s.includes("/obj") && !s.includes("/build") && !s.includes("/deploy") && !s.includes("/img"))
         all_files.forEach(s => this.readDocument(s))
     }
 
@@ -67,28 +67,28 @@ class LSA {
         return finalString;
     }
 
-    removeSpecialChars(documents: String[], isRequests : boolean): String[] {
-        if (isRequests){
+    removeSpecialChars(documents: String[], isRequests: boolean): String[] {
+        if (isRequests) {
             for (var i = 0; i < documents.length; i++) {
-                let listLines : String[] = [];
+                let listLines: String[] = [];
                 documents[i] = documents[i].replace('\n', ' ');
                 documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
                 for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
                     listLines.push(this.documentLinesS.get(i)![j])
-                    listLines[j] =  listLines[j].replace('\n', '');
+                    listLines[j] = listLines[j].replace('\n', '');
                     listLines[j] = listLines[j].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
                 }
             }
             return documents;
         } else {
-            let tmpDocumentLinesS : Map<number, String[]> = new Map<number, String[]>();
+            let tmpDocumentLinesS: Map<number, String[]> = new Map<number, String[]>();
             for (var i = 0; i < documents.length; i++) {
-                let listLines : String[] = [];
+                let listLines: String[] = [];
                 documents[i] = documents[i].replace('\n', ' ');
                 documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
                 for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
                     listLines.push(this.documentLinesS.get(i)![j])
-                    listLines[j] =  listLines[j].replace('\n', '');
+                    listLines[j] = listLines[j].replace('\n', '');
                     listLines[j] = listLines[j].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
                 }
                 tmpDocumentLinesS.set(i, listLines);
@@ -98,12 +98,12 @@ class LSA {
         }
     }
 
-    removeStopWords(documents: String[][], stopwords: String[], isRequests : boolean): String[][] {
+    removeStopWords(documents: String[][], stopwords: String[], isRequests: boolean): String[][] {
         let tmp: String;
         let tmp2: [String, Range];
-        let tmpDocumentLinesR : Map<number, [String, Range][]> = new Map<number, [String, Range][]>();
+        let tmpDocumentLinesR: Map<number, [String, Range][]> = new Map<number, [String, Range][]>();
         for (var i = 0; i < documents.length; i++) {
-            let listtokens : [String, Range][] = this.documentLinesR.get(i)!;
+            let listtokens: [String, Range][] = this.documentLinesR.get(i)!;
             for (var j = 0; j < stopwords.length; j++) {
                 for (var k = 0; k < documents[i].length; k++) {
                     if (documents[i][k] == stopwords[j]) {
@@ -114,7 +114,7 @@ class LSA {
                 }
                 for (var x = 0; x < listtokens.length; x++) {
                     if (listtokens[x][0] == stopwords[j]) {
-                        tmp2 = listtokens[listtokens.length-1];
+                        tmp2 = listtokens[listtokens.length - 1];
                         listtokens[x] = tmp2;
                         listtokens.pop();
                     }
@@ -147,22 +147,22 @@ class LSA {
         this.documentLinesS = tmpDocumentLinesS;
     }
 
-    tokensGenerator(documents: String[], isRequest : boolean): String[][] {
+    tokensGenerator(documents: String[], isRequest: boolean): String[][] {
         let documentsTokens: String[][] = [];
-        if (!isRequest){
-        for (var i = 0; i < documents.length; i++) {
-            let dictionnaire : [String, Range][] = [];
-            for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
-                let line : String = this.documentLinesS.get(i)![j];
-                let tokensLine : String[] = line.split(" ")
-               // let lastDepth = 0;
-                for (var k = 0; k < tokensLine.length; k++) {
-                    dictionnaire.push([tokensLine[k], new Range(new Position(j+1, 0), new Position(j+1, this.documentLinesS.get(i)!.length))]);
-                  //  lastDepth = tokensLine[k].length
+        if (!isRequest) {
+            for (var i = 0; i < documents.length; i++) {
+                let dictionnaire: [String, Range][] = [];
+                for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
+                    let line: String = this.documentLinesS.get(i)![j];
+                    let tokensLine: String[] = line.split(" ")
+                    // let lastDepth = 0;
+                    for (var k = 0; k < tokensLine.length; k++) {
+                        dictionnaire.push([tokensLine[k], new Range(new Position(j + 1, 0), new Position(j + 1, this.documentLinesS.get(i)!.length))]);
+                        //  lastDepth = tokensLine[k].length
+                    }
                 }
+                this.documentLinesR.set(i, dictionnaire)
             }
-            this.documentLinesR.set(i, dictionnaire)
-        }
         }
         for (var i = 0; i < documents.length; i++) {
             documentsTokens.push(documents[i].split(" "));
@@ -179,7 +179,7 @@ class LSA {
         return dictionary;
     }
 
-    dictionarygenerator(documents: String[], stopwords: String[], isRequests : boolean): Map<String, number[]> {
+    dictionarygenerator(documents: String[], stopwords: String[], isRequests: boolean): Map<String, number[]> {
         let dictionary = new Map<String, number[]>();
         documents = this.removeSpecialChars(documents, isRequests);
         documents = this.listStringsupperCase(documents);
@@ -291,34 +291,34 @@ class LSA {
 
     TFIDF(matrix: number[][]): number[][] {
         let keys = Array.from(this.dictionary.keys());
-        let Nj : number[] = []
+        let Nj: number[] = []
         for (var i = 0; i < matrix.length; i++) {
-            let Di = this.dictionary.get(keys[i])!.filter(function(elem, index, self) {
+            let Di = this.dictionary.get(keys[i])!.filter(function (elem, index, self) {
                 return index === self.indexOf(elem);
             }).length
             let D: number = this.documents.length;
             for (var j = 0; j < matrix[i].length; j++) {
-                if(i == 0){
-                    Nj[j]= this.countColomnes(matrix, j);
+                if (i == 0) {
+                    Nj[j] = this.countColomnes(matrix, j);
                 }
                 let Nij: number = matrix[i][j];
                 let calclog: number;
-                if (Di == 0){
+                if (Di == 0) {
                     calclog = 0;
                 } else {
                     calclog = parseFloat((Math.log(D / Di)).toFixed(3))
                 }
                 let calcN: number;
-                if (Nj[j] == 0){
+                if (Nj[j] == 0) {
                     calcN = 0;
-                 } else {
+                } else {
                     calcN = parseFloat((Nij / Nj[j]).toFixed(3));
                 }
                 matrix[i][j] = (calcN * calclog);
-            }  
+            }
         }
-           return matrix;
-       }
+        return matrix;
+    }
 
     printMatrix(matrix: number[][]) {
         let ligne: String = "";
@@ -511,10 +511,10 @@ class LSA {
     }
 
     cosinus_similarity(q: number[], d: number[]): number {
-        if (q.length > 0){
+        if (q.length > 0) {
             let dot_product = (q[0] * d[0]) + (q[1] * d[1])
-             let product_modulus = (Math.sqrt((q[0] * q[0]) + (q[1] * q[1])) * Math.sqrt((d[0] * d[0]) + (d[1] * d[1])))
-             return ((dot_product) /(product_modulus));
+            let product_modulus = (Math.sqrt((q[0] * q[0]) + (q[1] * q[1])) * Math.sqrt((d[0] * d[0]) + (d[1] * d[1])))
+            return ((dot_product) / (product_modulus));
         } else {
             return 0;
         }
@@ -600,7 +600,8 @@ class LSA {
         this.matrices[2] = matrixQ;
     }
 
-    public searchFeatures(script_requests: String):[String[], Map<String, [number, [Range, number][]]>[]] {
+
+    public searchFeatures(script_requests: String): [String[], Map<String, [number, [Range, number][]]>[]] {
         this.request_file = script_requests;
         let request_list: String[] = this.listRequestsGenerator(script_requests);
         let names_list: String[] = this.generateListNames(script_requests);
@@ -649,51 +650,82 @@ class LSA {
         return res;
     }
 
-    generateScoreOfeachRange(request_list : String[]){
+    reduceScores(mapScore: [String, Map<String, [number, [Range, number][]]>][]): [String, Map<String, Range[]>][] {
+        let res: [String, Map<String, Range[]>][] = []
+        for (let fm of mapScore) {
+            let feature = fm[0];
+            let map = new Map<String, Range[]>();
+            let t = [];
+            for (let key of fm[1].keys()) {
+                let ranges: Range[] = [];
+                let val: [number, [Range, number][]] = fm[1].get(key)!;
+                let ra: [Range, number][] = val[1];
+                for (let rn of ra) {
+                    ranges.push(rn[0]);
+                }
+
+                map.set(key, ranges);
+            }
+            res.push([feature, map]);
+        }
+
+        return res;
+    }
+
+    coupleToListScore(couple: [String[], Map<String, [number, [Range, number][]]>[]]): [String, Map<String, [number, [Range, number][]]>][] {
+        let res: [String, Map<String, [number, [Range, number][]]>][] = [];
+        for (var i = 0; i < couple[0].length; i++) {
+            res.push([couple[0][i], couple[1][i]]);
+        }
+
+        return res;
+    }
+
+    generateScoreOfeachRange(request_list: String[]) {
         var document = [];
-        for(var i=0; i< request_list.length; i++){
+        for (var i = 0; i < request_list.length; i++) {
             document.push(request_list[i])
         }
-        let dictionary : Map<String, number[]> = new Map<String, number[]>();
+        let dictionary: Map<String, number[]> = new Map<String, number[]>();
         dictionary = this.dictionarygenerator(document, this.stopwords, true);
 
         dictionary = this.removeWordsExpectIndexs(dictionary);
         let matrix: number[][] = [];
-        let keys : String [] = [];
-        for (let key of dictionary.keys()){
-            if (key === "" || key.length <= 1){
+        let keys: String[] = [];
+        for (let key of dictionary.keys()) {
+            if (key === "" || key.length <= 1) {
                 dictionary.delete(key);
-            } 
+            }
             else {
                 keys.push(key);
             }
         }
         matrix = this.matrix(dictionary, document);
         matrix = this.TFIDF(matrix);
-        let map : Map<String, number[]> = new Map<String, number[]>();
-        for(var i=0; i<matrix.length; i++){
+        let map: Map<String, number[]> = new Map<String, number[]>();
+        for (var i = 0; i < matrix.length; i++) {
             map.set(keys[i], matrix[i]);
         }
         this.tokenRequestScores = map;
     }
 
-    executeListOfRequests(names_list : String[], request_list : String[], matrixQ : number[][], matrixU : number[][], matrixV : number[][]) : Map<String, [number, [Range, number][]]>[]{
-        let listMaps : Map<String, [number, [Range, number][]]>[] = [];
-        let request_l : String[] = [];
-        for(var i=0; i<request_list.length; i++){
+    executeListOfRequests(names_list: String[], request_list: String[], matrixQ: number[][], matrixU: number[][], matrixV: number[][]): Map<String, [number, [Range, number][]]>[] {
+        let listMaps: Map<String, [number, [Range, number][]]>[] = [];
+        let request_l: String[] = [];
+        for (var i = 0; i < request_list.length; i++) {
             let x = request_list[i]
             request_l.push(x)
         }
         this.generateScoreOfeachRange(request_l);
-        for(var i = 0; i < request_list.length; i++){
-                var mot_cles = request_list[i];
-                let query = this.generator_query_vector(mot_cles.toUpperCase());
-                let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
-                let scores = this.score_documents_generator(querry_coor, matrixV)
-                var name_docs = this.documents_name;
-                let pertinent_docs : [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
-                let finalMap : Map<String, [number, [Range, number][]]> = this.generateRangesRequest(request_list[i].toUpperCase(), pertinent_docs, i); 
-                listMaps.push(finalMap);
+        for (var i = 0; i < request_list.length; i++) {
+            var mot_cles = request_list[i];
+            let query = this.generator_query_vector(mot_cles.toUpperCase());
+            let querry_coor: number[] = this.calcul_query_coords(query, matrixQ, this.slice_matrix_verticaly(matrixU));
+            let scores = this.score_documents_generator(querry_coor, matrixV)
+            var name_docs = this.documents_name;
+            let pertinent_docs: [number[], String[]] = this.display_most_pertinent_documents(scores, name_docs, 0, scores.length - 1);
+            let finalMap: Map<String, [number, [Range, number][]]> = this.generateRangesRequest(request_list[i].toUpperCase(), pertinent_docs, i);
+            listMaps.push(finalMap);
         }
         return listMaps;
     }
@@ -707,40 +739,40 @@ class LSA {
         return -1;
     }
 
-    searchRangesInDocument(request : String, list : [String, Range][], id_req : number) : [Range, number][]{
-        let list_range : [Range, number][] = [];
-        let tokens_request : String[] = request.split(' ');
-        let tokens_mots_cle_clean : String[] = [];
-        for (var i = 0; i<tokens_request.length; i++){
-            if (tokens_request[i].length > 0){
+    searchRangesInDocument(request: String, list: [String, Range][], id_req: number): [Range, number][] {
+        let list_range: [Range, number][] = [];
+        let tokens_request: String[] = request.split(' ');
+        let tokens_mots_cle_clean: String[] = [];
+        for (var i = 0; i < tokens_request.length; i++) {
+            if (tokens_request[i].length > 0) {
                 tokens_mots_cle_clean.push(tokens_request[i])
             }
         }
-        var unique = tokens_mots_cle_clean.filter(function(elem, index, self) {
+        var unique = tokens_mots_cle_clean.filter(function (elem, index, self) {
             return index === self.indexOf(elem);
         })
         console.log(id_req)
-        for (var j = 0; j < unique.length; j++){
-            for (var i = 0; i < list.length; i++){
-                if (unique[j] == list[i][0]){
+        for (var j = 0; j < unique.length; j++) {
+            for (var i = 0; i < list.length; i++) {
+                if (unique[j] == list[i][0]) {
                     if (this.tokenRequestScores.has(unique[j]))
-                    list_range.push([list[i][1], this.tokenRequestScores.get(unique[j])![id_req]]);
+                        list_range.push([list[i][1], this.tokenRequestScores.get(unique[j])![id_req]]);
                 }
-            } 
+            }
         }
         return list_range
     }
 
-    generateRangesRequest(request : String, pertinent_docs : [number[], String[]], id_req : number) : Map<String, [number, [Range, number][]]> {
-        let finalMap : Map<String, [number, [Range, number][]]> = new Map<String, [number, [Range, number][]]>();
-        let list_names : String[] = pertinent_docs[1];
-        let scores : number[] = pertinent_docs[0];
-        let id_doc : number;
-        for (var i = 0; i < list_names.length; i++){ 
-            let list_range : [Range, number][] = [];
+    generateRangesRequest(request: String, pertinent_docs: [number[], String[]], id_req: number): Map<String, [number, [Range, number][]]> {
+        let finalMap: Map<String, [number, [Range, number][]]> = new Map<String, [number, [Range, number][]]>();
+        let list_names: String[] = pertinent_docs[1];
+        let scores: number[] = pertinent_docs[0];
+        let id_doc: number;
+        for (var i = 0; i < list_names.length; i++) {
+            let list_range: [Range, number][] = [];
             id_doc = this.getIdDocument(list_names[i]);
             list_range = this.searchRangesInDocument(request, this.documentLinesR.get(id_doc)!, id_req);
-            if (list_range.length>0){
+            if (list_range.length > 0) {
                 finalMap.set(this.documents_name_invar[id_doc], [scores[i], list_range]);
             }
         }

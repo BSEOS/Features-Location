@@ -222,9 +222,14 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
     async searchFeatures(requestFile: String): Promise<void> {
 
         let res = await this.featureLocator.searchFeatures(requestFile);
-        this.featuresMap = this.featureLocator.coupleToList(res);
+
+        // this.featuresMap = this.featureLocator.coupleToList(res);
+        this.featuresScoreMap = this.featureLocator.coupleToListScore(res);
+        this.featuresMap = this.featureLocator.reduceScores(this.featuresScoreMap);
 
         console.log("SEARCH FEATURES");
+        console.log(this.featuresScoreMap);
+        console.log("?///////////MAP")
         this._onDidChangeTreeData.fire();
     }
 
@@ -404,6 +409,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 
             else if (element.type == vscode.FileType.File) {
                 let r: Range[] | undefined = element.rangeMap?.get(element.uri.path);
+
                 let res: Entry[] = r ? r.map(rang => (
                     { uri: element.uri, type: undefined, isRange: true, range: rang, isFeature: false, feature: element.feature, rangeMap: element.rangeMap })) : []
 
