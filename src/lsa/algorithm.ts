@@ -35,6 +35,7 @@ class LSA {
     dictionary = new Map<String, number[]>();
     documentLinesR = new Map<number, [String, Range][]>();
     documentLinesS = new Map<number, String[]>();
+    tokenRequestScores = new Map<String, number[]>();
 
     request_file: String = ""
 
@@ -66,21 +67,35 @@ class LSA {
         return finalString;
     }
 
-    removeSpecialChars(documents: String[]): String[] {
-        let tmpDocumentLinesS: Map<number, String[]> = new Map<number, String[]>();
-        for (var i = 0; i < documents.length; i++) {
-            let listLines: String[] = [];
-            documents[i] = documents[i].replace('\n', ' ');
-            documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
-            for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
-                listLines.push(this.documentLinesS.get(i)![j])
-                listLines[j] = listLines[j].replace('\n', '');
-                listLines[j] = listLines[j].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
+    removeSpecialChars(documents: String[], isRequests : boolean): String[] {
+        if (isRequests){
+            for (var i = 0; i < documents.length; i++) {
+                let listLines : String[] = [];
+                documents[i] = documents[i].replace('\n', ' ');
+                documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
+                for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
+                    listLines.push(this.documentLinesS.get(i)![j])
+                    listLines[j] =  listLines[j].replace('\n', '');
+                    listLines[j] = listLines[j].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
+                }
             }
-            tmpDocumentLinesS.set(i, listLines);
+            return documents;
+        } else {
+            let tmpDocumentLinesS : Map<number, String[]> = new Map<number, String[]>();
+            for (var i = 0; i < documents.length; i++) {
+                let listLines : String[] = [];
+                documents[i] = documents[i].replace('\n', ' ');
+                documents[i] = documents[i].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
+                for (var j = 0; j < this.documentLinesS.get(i)!.length; j++) {
+                    listLines.push(this.documentLinesS.get(i)![j])
+                    listLines[j] =  listLines[j].replace('\n', '');
+                    listLines[j] = listLines[j].replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ' ');
+                }
+                tmpDocumentLinesS.set(i, listLines);
+            }
+            this.documentLinesS = tmpDocumentLinesS;
+            return documents;
         }
-        this.documentLinesS = tmpDocumentLinesS;
-        return documents;
     }
 
     removeStopWords(documents: String[][], stopwords: String[]): String[][] {
