@@ -522,9 +522,14 @@ class LSA {
 
     score_documents_generator(q: number[], matrixV: number[][]): number[] {
         let tmp: number[] = [];
+        let maxScore = 0;
         for (var i = 0; i < matrixV.length; i++) {
-            tmp.push(this.cosinus_similarity(q, matrixV[i]));
+            let score = this.cosinus_similarity(q, matrixV[i]);
+            if (score > maxScore) maxScore = score;
+            tmp.push(score);
         }
+        tmp.forEach(x => x / maxScore);
+        
         return tmp;
     }
 

@@ -507,8 +507,10 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
             treeItem.command = { command: 'fileExplorer.openFileRange', title: "Open File Range", arguments: [element.uri, element.range] };
 
             let score = this.getRangeScore(element);
-            if (score)
-                treeItem.description = "score: " + score;
+            if (score){
+                score = score/1.5;
+                treeItem.description = "score: " + score.toFixed(4) + "%";
+            }
 
             treeItem.iconPath = new vscode.ThemeIcon("location");
             return treeItem;
@@ -520,8 +522,12 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
                 treeItem.command = { command: 'fileExplorer.openFile', title: "Open File", arguments: [element.uri] };
 
                 let score = this.getDocumentScore(element);
-                if (score)
-                    treeItem.description = "score: " + score;
+
+
+                if (score) {
+                    score = score * 100;
+                    treeItem.description = "score: " + score.toFixed(4) + "%";
+                }
 
                 treeItem.iconPath = new vscode.ThemeIcon("file-code");
             } else {
